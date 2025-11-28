@@ -467,8 +467,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         <span>Premium</span>
     </div>
 </div>
-
-<script type="module">
+  <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
@@ -498,8 +497,8 @@ const miniPlayer = document.getElementById('miniPlayer');
 const mainPlayBtn = document.getElementById('mainPlayBtn');
 const miniPlayBtn = document.getElementById('miniPlayBtn');
 const footerNavItems = document.querySelectorAll('.nav-item');
-const downloadBtn = document.getElementById('downloadBtn'); // New: Get download button
-const librarySearchIcon = document.getElementById('librarySearchIcon'); // New: Get library search icon
+const downloadBtn = document.getElementById('downloadBtn'); 
+const librarySearchIcon = document.getElementById('librarySearchIcon'); 
 // SEARCH ELEMENTS
 const searchInput = document.getElementById('searchInput');
 const searchResultsContainer = document.getElementById('searchResultsContainer');
@@ -515,15 +514,12 @@ function formatTime(seconds) {
 
 function getTrackDurationFromURL(url, trackElement) {
     const tempAudio = new Audio(url);
-    // The duration span is no longer used, but we keep the logic to fetch duration
-    // const durationSpan = trackElement.querySelector('.track-duration'); 
     
     tempAudio.preload = 'metadata';
 
     tempAudio.onloadedmetadata = () => {
         const duration = Math.round(tempAudio.duration);
         const index = parseInt(trackElement.dataset.index);
-        // Find the track in allTracks array and update its duration property
         const trackInAllTracks = allTracks.find(t => t.index === index);
         if(trackInAllTracks) {
             trackInAllTracks.duration = duration;
@@ -535,14 +531,11 @@ function getTrackDurationFromURL(url, trackElement) {
 // --- NAVIGATION LOGIC ---
 
 function navigateToPage(pageId) {
-    // Hide all pages
     document.querySelectorAll('.app-page').forEach(page => {
         page.classList.remove('active');
     });
-    // Show the selected page
     document.getElementById(pageId).classList.add('active');
 
-    // Update active state of navigation items
     footerNavItems.forEach(item => {
         item.classList.remove('active');
         if (item.getAttribute('data-page') === pageId) {
@@ -550,14 +543,12 @@ function navigateToPage(pageId) {
         }
     });
 
-    // Special case: Load music only if needed when navigating to library or search
     if (pageId === 'libraryPage' || pageId === 'searchPage') {
         if (allTracks.length === 0) {
             loadMusic();
         }
     }
     
-    // Reset search when leaving search page
     if (pageId !== 'searchPage') {
         searchInput.value = '';
         searchResultsContainer.innerHTML = '';
@@ -574,7 +565,6 @@ footerNavItems.forEach(item => {
     });
 });
 
-// New: Add listener for the search icon in the library header
 if (librarySearchIcon) {
     librarySearchIcon.addEventListener('click', () => {
         navigateToPage('searchPage');
@@ -602,7 +592,6 @@ function togglePlayPause() {
 }
 
 function loadTrack(index, autoPlay = true) {
-    // Use the index property from the track object in the allTracks array
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
 
@@ -617,22 +606,18 @@ function loadTrack(index, autoPlay = true) {
     currentAudio.src = track.url;
     currentAudio.load();
 
-    // Update Expanded Player UI
     document.getElementById('playerArt').src = imageSource;
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = track.artist;
     document.getElementById('playerTitleSmall').textContent = track.title;
     
-    // Update Mini Player UI
     document.getElementById('miniArt').src = imageSource;
     document.getElementById('miniTitle').textContent = track.title;
     document.getElementById('miniArtist').textContent = track.artist;
     miniPlayer.classList.add('active');
 
-    // Update duration on load (using the stored duration)
     document.getElementById('playerProgress').value = 0;
     document.getElementById('currentTime').textContent = '0:00';
-    // Ensure duration is handled, even if it's 0 (meaning metadata is pending)
     document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
     
     if (autoPlay) {
@@ -666,13 +651,10 @@ function updatePlaylistView() {
             }
         });
     }
-    // Update Library view
     updateItems(document.getElementById('musicContainer'));
-    // Update Search Results view
     updateItems(document.getElementById('searchResultsContainer'));
 }
 
-// *** NEW: Download Functionality ***
 function downloadCurrentTrack() {
     if (currentTrackIndex === -1) return;
 
@@ -682,31 +664,15 @@ function downloadCurrentTrack() {
         return;
     }
 
-    // Create a temporary anchor element
     const a = document.createElement('a');
-    
-    // Set the track's URL as the href
     a.href = track.url;
-
-    // Use the track title and artist for the filename
     const filename = `${track.title} - ${track.artist || 'Unknown'}.mp3`;
-    
-    // Set the download attribute with the desired filename.
-    // This forces the browser to download the file instead of navigating to it.
     a.download = filename; 
-
-    // Append to the document (necessary for click to work in some browsers)
     document.body.appendChild(a);
-
-    // Programmatically click the anchor
     a.click();
-
-    // Clean up
     document.body.removeChild(a);
 
     console.log(`Attempting to download: ${filename} from ${track.url}`);
-    // You might want to provide a visual feedback to the user here
-    // e.g., changing the icon temporarily or showing a toast message.
     alert(`Downloading "${track.title}"... (Check your browser downloads)`);
 }
 
@@ -737,8 +703,6 @@ currentAudio.addEventListener('timeupdate', () => {
     document.getElementById('currentTime').textContent = formatTime(currentAudio.currentTime);
 });
 currentAudio.addEventListener('ended', nextTrack);
-
-// New: Attach listener for the download button
 downloadBtn.addEventListener('click', downloadCurrentTrack);
 
 
@@ -747,7 +711,8 @@ downloadBtn.addEventListener('click', downloadCurrentTrack);
 function createTrackListItem(data) {
     const item = document.createElement('li');
     item.className = 'track-item';
-    item.dataset.index = data.index; // Use the added index property
+    // Use the actual track index for the loadTrack function
+    item.dataset.index = data.index; 
 
     const imageSource = data.image_base64 || "https://via.placeholder.com/50/121212/FFFFFF?text=A";
     
@@ -760,42 +725,34 @@ function createTrackListItem(data) {
     `;
     
     item.addEventListener('click', () => {
+        // Pass the correct unique index to load the song
         loadTrack(data.index, true); 
     });
     
-    // Set a timeout to apply the 'show' class for the animation (staggered delay)
-    // Only apply the staggered delay for the search results (where 'show' is used)
-    if (item.classList.contains('show')) {
-        setTimeout(() => {
-            item.classList.add('show');
-        }, data.index * 50); 
-    } else {
-         // Default display for library list
+    // Only apply immediate display for the main library list
+    if (!data.animationIndex) {
         item.style.opacity = 1;
         item.style.transform = 'translateY(0)';
     }
-    
+
     return item;
 }
 
 async function loadMusic() {
-    // Only load from Firebase if the array is empty
     if (allTracks.length === 0) {
         console.log("Loading music data from Firebase...");
         const querySnapshot = await getDocs(collection(db, "music"));
         let index = 0;
         querySnapshot.forEach(doc => {
-            // Add a unique index to each track for player/search functionality
             allTracks.push({ 
                 id: doc.id, 
-                index: index++, 
+                index: index++, // This is the unique, permanent index
                 ...doc.data() 
             });
         });
         console.log(`Loaded ${allTracks.length} tracks.`);
     }
 
-    // Clear and render the tracks in the Library
     musicContainer.innerHTML = '';
     allTracks.forEach((data) => {
         const item = createTrackListItem(data);
@@ -806,7 +763,6 @@ async function loadMusic() {
         }
     });
 
-    // Load the first track once the data is ready, if no track is loaded
     if (allTracks.length > 0 && currentTrackIndex === -1) {
         currentTrackIndex = allTracks[0].index; 
         loadTrack(currentTrackIndex, false); 
@@ -823,31 +779,40 @@ function renderSearchResults(results) {
         return;
     }
     
-    // Reset index for the staggered animation
     results.forEach((data, i) => {
-        // Temporarily override the index for staggering the animation and add 'show' class
-        const animatedData = {...data, index: i}; 
-        const item = createTrackListItem(animatedData);
-        item.classList.add('show'); // Add show class for animation
+        // Create an object for the list item. We only add a temporary index (i) 
+        // for the visual staggered animation, but the track's real index (data.index)
+        // is preserved for playing.
+        const listItemData = { 
+            ...data, 
+            animationIndex: i 
+        }; 
+        
+        const item = createTrackListItem(listItemData);
+        
+        // Manually handle the staggered search animation
+        item.style.opacity = 0;
+        item.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+            item.classList.add('show');
+        }, i * 50); 
+        
         searchResultsContainer.appendChild(item);
     });
     updatePlaylistView();
 }
 
 
-searchInput.addEventListener('input', async (e) => { // Made async to await music load
+searchInput.addEventListener('input', async (e) => { 
     const query = e.target.value.toLowerCase().trim();
     
-    // *** FIX: Ensure music data is loaded before searching ***
     if (allTracks.length === 0) {
         await loadMusic();
     }
     
     if (query.length > 0) {
-        // 1. Hide browsing content
         browsingSection.classList.add('hidden');
         
-        // 2. Filter tracks
         const filteredTracks = allTracks.filter(track => {
             return (
                 (track.title && track.title.toLowerCase().includes(query)) ||
@@ -855,14 +820,10 @@ searchInput.addEventListener('input', async (e) => { // Made async to await musi
             );
         });
         
-        // 3. Render results with animation
         renderSearchResults(filteredTracks);
         
     } else {
-        // 1. Show browsing content
         browsingSection.classList.remove('hidden');
-        
-        // 2. Clear results
         searchResultsContainer.innerHTML = '';
     }
 });
@@ -879,5 +840,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
 </body>
 </html>
