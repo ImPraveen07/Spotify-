@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotify Clone App</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1db954">
+<link rel="apple-touch-icon" href="s192.png">
+<style>
+/* --- Global Styles & Variables --- */
+:root {
+    --spotify-black: #121212;
+    --spotify-dark-grey: #181818;
+    --spotify-light-grey: #b3b3b3;
+    --spotify-green: #1db954;
+    --text-faded: #a7a7a7;
+    --bg-darker: #000000;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--spotify-black);
+    color: white;
+    min-height: 100vh;
+}
+
+/* --- Main View Container & Pages --- */
+.main-content {
+    padding-bottom: 120px; /* Space for mini-player and footer nav */
+}
+
+.app-page {
+    display: none; /* Hide all pages initially */
+    min-height: calc(100vh - 60px); /* Fill screen minus nav bar */
+}
+
+.app-page.active {
+    display: block;
+}
+
+/* --- Your Library Page --- */
+.library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    padding-top: 50px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.library-header .title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.library-filter-tabs {
+    padding: 8px 16px;
+    display: flex;
+    gap: 10px;
+}
+
+.filter-tab {
+    padding: 6px 12px;
+    border: 1px solid var(--text-faded);
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    color: white;
+}
+.filter-tab.active {
+    background: white;
+    color: var(--spotify-black);
+    border-color: white;
+}
+
+.library-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: var(--text-faded);
+}
+
+.library-controls i {
+    color: var(--text-faded);
+    margin-right: 5px;
+}
+
+/* --- Track/Item List (Used for Library & Search Results) --- */
+.track-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.track-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    
+    /* Animation initial state: hidden and slightly offset */
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.track-item.show {
+    /* Animation final state: visible */
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.track-item:hover {
+    background-color: var(--spotify-dark-grey);
+}
+
+.track-item.playing .track-info h3 {
+    color: var(--spotify-green); 
+}
+
+.track-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-right: 12px;
+    border-radius: 4px; /* Use rounded corners for album art */
+}
+
+.track-info {
+    flex-grow: 1;
+    min-width: 0; 
+}
+
+.track-info h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-info p {
+    margin: 2px 0 0 0;
+    font-size: 13px;
+    color: var(--text-faded);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-duration {
+    font-size: 13px;
+    color: var(--text-faded);
+    margin-right: 15px;
+}
+.track-item .track-duration {
+    display: none; 
+}
+
+/* --- Search Page --- */
+.search-page {
+    padding-bottom: 0;
+}
+
+.search-header {
+    padding: 16px;
+    padding-top: 50px;
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: white;
+    color: var(--spotify-black);
+    border-radius: 6px;
+    margin: 0 16px 20px 16px;
+    padding: 10px;
+}
+
+.search-bar i {
+    font-size: 18px;
+    margin-right: 10px;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--spotify-black);
+    font-size: 16px;
+    flex-grow: 1;
+}
+
+/* --- Search Results & Browsing Hide/Show --- */
+.start-browsing {
+    padding: 0 16px;
+}
+
+.browsing-section.hidden {
+    display: none;
+}
+
+.browsing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 16px;
+}
+
+.grid-item {
+    height: 100px;
+    border-radius: 8px;
+    background: linear-gradient(to bottom right, #4CAF50, #2E8B57);
+    padding: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Example Gradient Colors */
+.grid-item:nth-child(1) { background: linear-gradient(to bottom right, #AA1445, #E93F6A); } 
+.grid-item:nth-child(2) { background: linear-gradient(to bottom right, #1E8145, #38A169); } 
+.grid-item:nth-child(3) { background: linear-gradient(to bottom right, #800080, #A020F0); } 
+.grid-item:nth-child(4) { background: linear-gradient(to bottom right, #005A9C, #0080C0); } 
+
+
+/* --- EXPANDED PLAYER STYLES --- */
+.expanded-player {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to bottom, #004d40 0%, var(--bg-darker) 100%);
+    z-index: 100; display: flex; flex-direction: column; padding: 16px; box-sizing: border-box;
+    transition: transform 0.3s ease-in-out; transform: translateY(100%); 
+}
+.expanded-player.active { transform: translateY(0); }
+.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.player-header i { font-size: 24px; cursor: pointer; }
+.player-header .playlist-indicator { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--text-faded); }
+.player-art-container { display: flex; justify-content: center; align-items: center; flex-grow: 1; padding-top: 20px; padding-bottom: 40px; }
+.player-art { width: 80vw; max-width: 350px; aspect-ratio: 1 / 1; border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); }
+.player-details { margin: 0 0 20px 0; display: flex; justify-content: space-between; align-items: flex-end; }
+.player-details h2 { margin: 0; font-size: 24px; font-weight: 700; }
+.player-details p { margin: 2px 0 0 0; font-size: 16px; color: var(--text-faded); }
+.progress-container { margin-bottom: 20px; }
+.time-stamps { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-faded); margin-top: 5px; }
+.controls-row { display: flex; justify-content: space-around; align-items: center; font-size: 24px; margin-bottom: 20px; }
+.controls-row button { background: none; border: none; color: white; cursor: pointer; padding: 10px; outline: none; }
+.controls-row .main-play { font-size: 72px; }
+
+/* Range Input (Progress Bar) */
+input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #535353; outline: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; }
+
+
+/* --- MINI PLAYER BAR --- */
+.mini-player {
+    position: fixed; bottom: 60px; left: 5px; right: 5px; height: 55px;
+    background: #404040; border-radius: 8px; display: flex;
+    align-items: center; padding: 0 10px; z-index: 50; cursor: pointer;
+    transform: translateY(100%); transition: transform 0.3s ease-in-out;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+}
+.mini-player.active { transform: translateY(0); }
+.mini-track-info { flex-grow: 1; padding: 0 10px; }
+.mini-track-info h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-track-info p { margin: 0; font-size: 12px; color: var(--text-faded); }
+.mini-controls button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0 5px; }
+.mini-controls .mini-check { color: var(--spotify-green); font-size: 22px; padding: 0 8px; }
+
+
+/* --- FOOTER NAVIGATION --- */
+.footer-nav {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+    background: var(--spotify-dark-grey); display: flex;
+    justify-content: space-around; align-items: center; z-index: 55;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-item {
+    color: var(--text-faded);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    padding-top: 5px;
+    cursor: pointer;
+}
+.nav-item.active {
+    color: white;
+}
+
+</style>
+</head>
+<body>
+
+<div class="main-content">
+    
+    <div class="app-page" id="homePage">
+        <div class="library-header">
+             <span style="font-size: 30px;">👋 Hello!</span>
+        </div>
+        <h2 style="padding: 0 16px;">It's New Music Friday!</h2>
+        <div style="height: 300px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
+            <p>Home Feed Content Placeholder</p>
+        </div>
+    </div>
+
+    <div class="app-page" id="searchPage">
+        <div class="search-header">
+            <span class="title">Search</span>
+            <i class="fas fa-camera"></i>
+        </div>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="What do you want to listen to?">
+        </div>
+        
+        <ul class="track-list" id="searchResultsContainer">
+            </ul>
+        
+        <div class="browsing-section" id="browsingSection">
+            <h3 class="start-browsing">Start browsing</h3>
+            <div class="browsing-grid">
+                <div class="grid-item">Music</div>
+                <div class="grid-item">Podcasts</div>
+                <div class="grid-item">Live Events</div>
+                <div class="grid-item">Home of I-Pop</div>
+            </div>
+            
+            <h3 class="start-browsing">Discover something new</h3>
+            <div style="height: 200px; background: #282828; margin: 16px; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
+                <p>Discovery Carousel Placeholder</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-page active" id="libraryPage">
+        <div class="library-header">
+            <span class="title">Your Library</span>
+            <div><i class="fas fa-search" id="librarySearchIcon" style="margin-right: 20px; cursor: pointer;"></i><i class="fas fa-plus" style="cursor: pointer;"></i></div>
+        </div>
+        
+        <div class="library-filter-tabs">
+            <div class="filter-tab active">Playlists</div>
+            <div class="filter-tab">Albums</div>
+            <div class="filter-tab">Artists</div>
+        </div>
+
+        <div class="library-controls">
+            <div style="display:flex; align-items:center;">
+                <i class="fas fa-arrow-up"></i>
+                <i class="fas fa-arrow-down" style="margin-right: 15px;"></i>
+                <span>Recents</span>
+            </div>
+            <i class="fas fa-th-large" style="margin-right: 0;"></i> </div>
+
+        <ul class="track-list" id="musicContainer">
+            </ul>
+    </div>
+</div>
+
+<div class="expanded-player" id="expandedPlayer">
+    <div class="player-header">
+        <i class="fas fa-chevron-down" id="minimizeBtn"></i>
+        <div class="playlist-indicator">
+            PLAYING FROM PLAYLIST<br>
+            <span id="playerTitleSmall" style="color:white; font-size:14px;"></span>
+        </div>
+        <i class="fas fa-ellipsis-v"></i>
+    </div>
+
+    <div class="player-art-container">
+        <img class="player-art" id="playerArt" src="" alt="Album Art">
+    </div>
+
+    <div class="player-details">
+        <div>
+            <h2 id="playerTrackTitle"></h2>
+            <p id="playerArtistName"></p>
+        </div>
+        <i class="fas fa-check-circle" id="likeBtn" style="color:var(--spotify-green); font-size:24px; cursor:pointer;"></i>
+    </div>
+
+    <div class="progress-container">
+        <input type="range" id="playerProgress" min="0" max="100" value="0">
+        <div class="time-stamps">
+            <span id="currentTime">0:00</span>
+            <span id="totalTime">0:00</span>
+        </div>
+    </div>
+
+    <div class="controls-row">
+        <button id="shuffleBtn"><i class="fas fa-random"></i></button>
+        <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
+        <button class="main-play" id="mainPlayBtn"><i class="fas fa-play"></i></button>
+        <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
+        <button id="repeatBtn"><i class="fas fa-redo-alt"></i></button>
+    </div>
+    
+    <div class="controls-row" style="font-size: 18px; margin-top: -10px;">
+        <button><i class="fas fa-volume-up"></i></button>
+        <button><i class="fas fa-mobile-alt"></i></button>
+        <button><i class="fas fa-share-alt"></i></button>
+        <button id="downloadBtn"><i class="fas fa-download"></i></button> 
+    </div>
+    
+    <div class="lyrics-preview" style="text-align:center; padding: 10px; background:rgba(255,255,255,0.05); border-radius: 8px; margin-top: 10px;">
+        Lyrics preview
+    </div>
+</div>
+
+<div class="mini-player" id="miniPlayer">
+    <img id="miniArt" src="" alt="Album Art" class="track-img" style="width: 40px; height: 40px; border-radius: 2px;">
+    <div class="mini-track-info">
+        <h4 id="miniTitle"></h4>
+        <p id="miniArtist"></p>
+    </div>
+    <div class="mini-controls">
+        <button class="mini-check"><i class="fas fa-check"></i></button>
+        <button id="miniPlayBtn"><i class="fas fa-play"></i></button>
+    </div>
+</div>
+
+<div class="footer-nav">
+    <div class="nav-item" data-page="homePage">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+    </div>
+    <div class="nav-item" data-page="searchPage">
+        <i class="fas fa-search"></i>
+        <span>Search</span>
+    </div>
+    <div class="nav-item active" data-page="libraryPage">
+        <i class="fas fa-book"></i>
+        <span>Your Library</span>
+    </div>
+    <div class="nav-item">
+        <i class="fab fa-spotify"></i>
+        <span>Premium</span>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC9rehsf-0jkb9dAeT1-0Z1C-yRJ0YI9dA",
+    authDomain: "gymnm-ce84b.firebaseapp.com",
+    projectId: "gymnm-ce84b",
+    storageBucket: "gymnm-ce84b.appspot.com",
+    messagingSenderId: "474926929394",
+    appId: "1:474926929394:web:6abdb807caba2751a5c76b",
+    measurementId: "G-6R9S8LYZNF"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// --- GLOBAL STATE ---
+let allTracks = [];
+let currentTrackIndex = -1;
+let currentAudio = new Audio();
+let isPlaying = false;
+
+// --- DOM ELEMENTS ---
+const musicContainer = document.getElementById('musicContainer');
+const expandedPlayer = document.getElementById('expandedPlayer');
+const miniPlayer = document.getElementById('miniPlayer');
+const mainPlayBtn = document.getElementById('mainPlayBtn');
+const miniPlayBtn = document.getElementById('miniPlayBtn');
+const footerNavItems = document.querySelectorAll('.nav-item');
+const downloadBtn = document.getElementById('downloadBtn'); // New: Get download button
+const librarySearchIcon = document.getElementById('librarySearchIcon'); // New: Get library search icon
+// SEARCH ELEMENTS
+const searchInput = document.getElementById('searchInput');
+const searchResultsContainer = document.getElementById('searchResultsContainer');
+const browsingSection = document.getElementById('browsingSection');
+
+// --- HELPER FUNCTIONS ---
+function formatTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return "0:00";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+}
+
+function getTrackDurationFromURL(url, trackElement) {
+    const tempAudio = new Audio(url);
+    // The duration span is no longer used, but we keep the logic to fetch duration
+    // const durationSpan = trackElement.querySelector('.track-duration'); 
+    
+    tempAudio.preload = 'metadata';
+
+    tempAudio.onloadedmetadata = () => {
+        const duration = Math.round(tempAudio.duration);
+        const index = parseInt(trackElement.dataset.index);
+        // Find the track in allTracks array and update its duration property
+        const trackInAllTracks = allTracks.find(t => t.index === index);
+        if(trackInAllTracks) {
+            trackInAllTracks.duration = duration;
+        }
+    };
+}
+
+
+// --- NAVIGATION LOGIC ---
+
+function navigateToPage(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.app-page').forEach(page => {
+        page.classList.remove('active');
+    });
+    // Show the selected page
+    document.getElementById(pageId).classList.add('active');
+
+    // Update active state of navigation items
+    footerNavItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('data-page') === pageId) {
+            item.classList.add('active');
+        }
+    });
+
+    // Special case: Load music only if needed when navigating to library or search
+    if (pageId === 'libraryPage' || pageId === 'searchPage') {
+        if (allTracks.length === 0) {
+            loadMusic();
+        }
+    }
+    
+    // Reset search when leaving search page
+    if (pageId !== 'searchPage') {
+        searchInput.value = '';
+        searchResultsContainer.innerHTML = '';
+        browsingSection.classList.remove('hidden');
+    }
+}
+
+footerNavItems.forEach(item => {
+    item.addEventListener('click', () => {
+        const pageId = item.getAttribute('data-page');
+        if (pageId) {
+            navigateToPage(pageId);
+        }
+    });
+});
+
+// New: Add listener for the search icon in the library header
+if (librarySearchIcon) {
+    librarySearchIcon.addEventListener('click', () => {
+        navigateToPage('searchPage');
+    });
+}
+
+
+// --- PLAYER CONTROLS ---
+
+function togglePlayPause() {
+    if (currentTrackIndex === -1) return;
+
+    if (isPlaying) {
+        currentAudio.pause();
+        isPlaying = false;
+        mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+        miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+    } else {
+        currentAudio.play().catch(e => console.error("Play failed:", e));
+        isPlaying = true;
+        mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        miniPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    }
+    updatePlaylistView();
+}
+
+function loadTrack(index, autoPlay = true) {
+    // Use the index property from the track object in the allTracks array
+    const track = allTracks.find(t => t.index === index);
+    if (!track) return;
+
+    if(currentAudio && isPlaying) {
+        currentAudio.pause();
+        isPlaying = false;
+    }
+
+    currentTrackIndex = index;
+    const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Art";
+    
+    currentAudio.src = track.url;
+    currentAudio.load();
+
+    // Update Expanded Player UI
+    document.getElementById('playerArt').src = imageSource;
+    document.getElementById('playerTrackTitle').textContent = track.title;
+    document.getElementById('playerArtistName').textContent = track.artist;
+    document.getElementById('playerTitleSmall').textContent = track.title;
+    
+    // Update Mini Player UI
+    document.getElementById('miniArt').src = imageSource;
+    document.getElementById('miniTitle').textContent = track.title;
+    document.getElementById('miniArtist').textContent = track.artist;
+    miniPlayer.classList.add('active');
+
+    // Update duration on load (using the stored duration)
+    document.getElementById('playerProgress').value = 0;
+    document.getElementById('currentTime').textContent = '0:00';
+    // Ensure duration is handled, even if it's 0 (meaning metadata is pending)
+    document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
+    
+    if (autoPlay) {
+        isPlaying = false; 
+        togglePlayPause();
+        document.getElementById('expandedPlayer').classList.add('active'); 
+    } else {
+        mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+        miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+    }
+
+    updatePlaylistView();
+}
+
+function nextTrack() {
+    let nextIndex = (currentTrackIndex + 1) % allTracks.length;
+    loadTrack(nextIndex);
+}
+
+function prevTrack() {
+    let prevIndex = (currentTrackIndex - 1 + allTracks.length) % allTracks.length;
+    loadTrack(prevIndex);
+}
+
+function updatePlaylistView() {
+    const updateItems = (container) => {
+        container.querySelectorAll('.track-item').forEach(item => {
+            item.classList.remove('playing');
+            if (parseInt(item.dataset.index) === currentTrackIndex && isPlaying) {
+                item.classList.add('playing');
+            }
+        });
+    }
+    // Update Library view
+    updateItems(document.getElementById('musicContainer'));
+    // Update Search Results view
+    updateItems(document.getElementById('searchResultsContainer'));
+}
+
+// *** NEW: Download Functionality ***
+function downloadCurrentTrack() {
+    if (currentTrackIndex === -1) return;
+
+    const track = allTracks.find(t => t.index === currentTrackIndex);
+    if (!track || !track.url) {
+        alert("Audio URL not available for download.");
+        return;
+    }
+
+    // Create a temporary anchor element
+    const a = document.createElement('a');
+    
+    // Set the track's URL as the href
+    a.href = track.url;
+
+    // Use the track title and artist for the filename
+    const filename = `${track.title} - ${track.artist || 'Unknown'}.mp3`;
+    
+    // Set the download attribute with the desired filename.
+    // This forces the browser to download the file instead of navigating to it.
+    a.download = filename; 
+
+    // Append to the document (necessary for click to work in some browsers)
+    document.body.appendChild(a);
+
+    // Programmatically click the anchor
+    a.click();
+
+    // Clean up
+    document.body.removeChild(a);
+
+    console.log(`Attempting to download: ${filename} from ${track.url}`);
+    // You might want to provide a visual feedback to the user here
+    // e.g., changing the icon temporarily or showing a toast message.
+    alert(`Downloading "${track.title}"... (Check your browser downloads)`);
+}
+
+// Attach player listeners once
+mainPlayBtn.addEventListener('click', togglePlayPause);
+miniPlayBtn.addEventListener('click', togglePlayPause);
+document.getElementById('nextBtn').addEventListener('click', nextTrack);
+document.getElementById('prevBtn').addEventListener('click', prevTrack);
+document.getElementById('minimizeBtn').addEventListener('click', () => {
+    document.getElementById('expandedPlayer').classList.remove('active');
+});
+miniPlayer.addEventListener('click', (e) => {
+    if(e.target.closest('#miniPlayBtn')) return; 
+    if (currentTrackIndex !== -1) {
+        document.getElementById('expandedPlayer').classList.add('active');
+    }
+});
+document.getElementById('playerProgress').addEventListener('input', () => {
+    const progress = document.getElementById('playerProgress');
+    if(isNaN(currentAudio.duration)) return;
+    const seekTo = (progress.value / 100) * currentAudio.duration;
+    currentAudio.currentTime = seekTo;
+});
+currentAudio.addEventListener('timeupdate', () => {
+    if(isNaN(currentAudio.duration) || currentAudio.duration === 0) return;
+    const progress = (currentAudio.currentTime / currentAudio.duration) * 100;
+    document.getElementById('playerProgress').value = progress;
+    document.getElementById('currentTime').textContent = formatTime(currentAudio.currentTime);
+});
+currentAudio.addEventListener('ended', nextTrack);
+
+// New: Attach listener for the download button
+downloadBtn.addEventListener('click', downloadCurrentTrack);
+
+
+// --- CORE DATA LOADING & RENDERING FUNCTIONS ---
+
+function createTrackListItem(data) {
+    const item = document.createElement('li');
+    item.className = 'track-item';
+    item.dataset.index = data.index; // Use the added index property
+
+    const imageSource = data.image_base64 || "https://via.placeholder.com/50/121212/FFFFFF?text=A";
+    
+    item.innerHTML = `
+        <img class="track-img" src="${imageSource}" alt="Album Art">
+        <div class="track-info">
+            <h3>${data.title}</h3>
+            <p>Single • ${data.artist || 'Unknown Artist'}</p>
+        </div>
+    `;
+    
+    item.addEventListener('click', () => {
+        loadTrack(data.index, true); 
+    });
+    
+    // Set a timeout to apply the 'show' class for the animation (staggered delay)
+    // Only apply the staggered delay for the search results (where 'show' is used)
+    if (item.classList.contains('show')) {
+        setTimeout(() => {
+            item.classList.add('show');
+        }, data.index * 50); 
+    } else {
+         // Default display for library list
+        item.style.opacity = 1;
+        item.style.transform = 'translateY(0)';
+    }
+    
+    return item;
+}
+
+async function loadMusic() {
+    // Only load from Firebase if the array is empty
+    if (allTracks.length === 0) {
+        console.log("Loading music data from Firebase...");
+        const querySnapshot = await getDocs(collection(db, "music"));
+        let index = 0;
+        querySnapshot.forEach(doc => {
+            // Add a unique index to each track for player/search functionality
+            allTracks.push({ 
+                id: doc.id, 
+                index: index++, 
+                ...doc.data() 
+            });
+        });
+        console.log(`Loaded ${allTracks.length} tracks.`);
+    }
+
+    // Clear and render the tracks in the Library
+    musicContainer.innerHTML = '';
+    allTracks.forEach((data) => {
+        const item = createTrackListItem(data);
+        musicContainer.appendChild(item);
+        
+        if (!data.duration || data.duration === 0) {
+            getTrackDurationFromURL(data.url, item);
+        }
+    });
+
+    // Load the first track once the data is ready, if no track is loaded
+    if (allTracks.length > 0 && currentTrackIndex === -1) {
+        currentTrackIndex = allTracks[0].index; 
+        loadTrack(currentTrackIndex, false); 
+    }
+}
+
+
+// --- SEARCH FUNCTIONALITY ---
+
+function renderSearchResults(results) {
+    searchResultsContainer.innerHTML = '';
+    if (results.length === 0) {
+        searchResultsContainer.innerHTML = `<li style="padding: 16px; color: var(--text-faded);">No results found.</li>`;
+        return;
+    }
+    
+    // Reset index for the staggered animation
+    results.forEach((data, i) => {
+        // Temporarily override the index for staggering the animation and add 'show' class
+        const animatedData = {...data, index: i}; 
+        const item = createTrackListItem(animatedData);
+        item.classList.add('show'); // Add show class for animation
+        searchResultsContainer.appendChild(item);
+    });
+    updatePlaylistView();
+}
+
+
+searchInput.addEventListener('input', async (e) => { // Made async to await music load
+    const query = e.target.value.toLowerCase().trim();
+    
+    // *** FIX: Ensure music data is loaded before searching ***
+    if (allTracks.length === 0) {
+        await loadMusic();
+    }
+    
+    if (query.length > 0) {
+        // 1. Hide browsing content
+        browsingSection.classList.add('hidden');
+        
+        // 2. Filter tracks
+        const filteredTracks = allTracks.filter(track => {
+            return (
+                (track.title && track.title.toLowerCase().includes(query)) ||
+                (track.artist && track.artist.toLowerCase().includes(query))
+            );
+        });
+        
+        // 3. Render results with animation
+        renderSearchResults(filteredTracks);
+        
+    } else {
+        // 1. Show browsing content
+        browsingSection.classList.remove('hidden');
+        
+        // 2. Clear results
+        searchResultsContainer.innerHTML = '';
+    }
+});
+
+
+// Initialize the application: start on the library page and load data
+loadMusic();
+navigateToPage('libraryPage');
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registered:', reg))
+      .catch(err => console.error('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
