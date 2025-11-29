@@ -2,19 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-  <!-- Open Graph / Social Media Preview -->
-<meta property="og:title" content="Spotify Clone App">
+  <meta property="og:title" content="Spotify Clone App">
 <meta property="og:description" content="Listen to music like Spotify. Your music library and more.">
-<meta property="og:image" content="s512.png"> <!-- This is your 512x512 logo -->
+<meta property="og:image" content="s512.png"> 
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://your-github-username.github.io/your-repo-name/">
 
-<!-- Twitter Card Preview -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Spotify Clone App">
-<meta name="twitter:description" content="Listen to music like Spotify. Your music library and more.">
+<meta name="twitter:description" content="Listen to music like Spotify. Your music-library and more.">
 <meta name="twitter:image" content="s512.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spotify </title>
@@ -24,7 +22,9 @@
 <meta name="theme-color" content="#1db954">
 <link rel="apple-touch-icon" href="s192.png">
 <style>
+/* ---------------------------------------------------- */
 /* --- Global Styles & Variables --- */
+/* ---------------------------------------------------- */
 :root {
     --spotify-black: #121212;
     --spotify-dark-grey: #181818;
@@ -44,69 +44,23 @@ body {
 
 /* --- Main View Container & Pages --- */
 .main-content {
-    padding-bottom: 120px; /* Space for mini-player and footer nav */
+    /* Keep this padding to ensure main page content scrolls above fixed mini-player/footer */
+    padding-bottom: 120px; 
 }
 
 .app-page {
     display: none; /* Hide all pages initially */
-    min-height: calc(100vh - 60px); /* Fill screen minus nav bar */
+    min-height: 100vh; /* Allow content to push height beyond the viewport for scrolling */
 }
 
 .app-page.active {
     display: block;
+    /* Ensure only the active page scrolls */
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch;
 }
 
-/* --- Your Library Page --- */
-.library-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    padding-top: 50px;
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.library-header .title {
-    font-size: 24px;
-    font-weight: 700;
-}
-
-.library-filter-tabs {
-    padding: 8px 16px;
-    display: flex;
-    gap: 10px;
-}
-
-.filter-tab {
-    padding: 6px 12px;
-    border: 1px solid var(--text-faded);
-    border-radius: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    color: white;
-}
-.filter-tab.active {
-    background: white;
-    color: var(--spotify-black);
-    border-color: white;
-}
-
-.library-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 16px;
-    font-size: 14px;
-    color: var(--text-faded);
-}
-
-.library-controls i {
-    color: var(--text-faded);
-    margin-right: 5px;
-}
-
-/* --- Track/Item List (Used for Library & Search Results) --- */
+/* --- Track/Item List (Re-used for Library & Popular Tracks) --- */
 .track-list {
     list-style: none;
     padding: 0;
@@ -119,14 +73,11 @@ body {
     padding: 8px 16px;
     cursor: pointer;
     transition: background-color 0.1s ease;
-    
-    /* Animation initial state: hidden and slightly offset */
     opacity: 0;
     transform: translateY(10px);
 }
 
 .track-item.show {
-    /* Animation final state: visible */
     opacity: 1;
     transform: translateY(0);
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
@@ -145,7 +96,7 @@ body {
     height: 50px;
     object-fit: cover;
     margin-right: 12px;
-    border-radius: 4px; /* Use rounded corners for album art */
+    border-radius: 4px; 
 }
 
 .track-info {
@@ -180,142 +131,253 @@ body {
     display: none; 
 }
 
-/* --- Search Page --- */
-.search-page {
-    padding-bottom: 0;
-}
-
-.search-header {
-    padding: 16px;
-    padding-top: 50px;
-    font-size: 24px;
-    font-weight: 700;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.search-bar {
-    display: flex;
-    align-items: center;
-    background: white;
-    color: var(--spotify-black);
-    border-radius: 6px;
-    margin: 0 16px 20px 16px;
-    padding: 10px;
-}
-
-.search-bar i {
-    font-size: 18px;
-    margin-right: 10px;
-}
-
-.search-bar input {
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--spotify-black);
-    font-size: 16px;
-    flex-grow: 1;
-}
-
-/* --- Search Results & Browsing Hide/Show --- */
-.start-browsing {
-    padding: 0 16px;
-}
-
-.browsing-section.hidden {
-    display: none;
-}
-
-.browsing-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    padding: 16px;
-}
-
-.grid-item {
-    height: 100px;
-    border-radius: 8px;
-    background: linear-gradient(to bottom right, #4CAF50, #2E8B57);
-    padding: 10px;
-    font-weight: 700;
-    font-size: 16px;
-    overflow: hidden;
-    position: relative;
-}
-
-/* Example Gradient Colors */
-.grid-item:nth-child(1) { background: linear-gradient(to bottom right, #AA1445, #E93F6A); } 
-.grid-item:nth-child(2) { background: linear-gradient(to bottom right, #1E8145, #38A169); } 
-.grid-item:nth-child(3) { background: linear-gradient(to bottom right, #800080, #A020F0); } 
-.grid-item:nth-child(4) { background: linear-gradient(to bottom right, #005A9C, #0080C0); } 
-
-
-/* --- EXPANDED PLAYER STYLES --- */
+/* --- EXPANDED PLAYER STYLES (Single-Scroll View) --- */
 .expanded-player {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: linear-gradient(to bottom, #004d40 0%, var(--bg-darker) 100%);
-    z-index: 100; display: flex; flex-direction: column; padding: 16px; box-sizing: border-box;
-    transition: transform 0.3s ease-in-out; transform: translateY(100%); 
-}
-.expanded-player.active { transform: translateY(0); }
-.player-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.player-header i { font-size: 24px; cursor: pointer; }
-.player-header .playlist-indicator { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--text-faded); }
-.player-art-container { display: flex; justify-content: center; align-items: center; flex-grow: 1; padding-top: 20px; padding-bottom: 40px; }
-.player-art { width: 80vw; max-width: 350px; aspect-ratio: 1 / 1; border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); }
-.player-details { margin: 0 0 20px 0; display: flex; justify-content: space-between; align-items: flex-end; }
-.player-details h2 { margin: 0; font-size: 24px; font-weight: 700; }
-.player-details p { margin: 2px 0 0 0; font-size: 16px; color: var(--text-faded); }
-.progress-container { margin-bottom: 20px; }
-.time-stamps { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-faded); margin-top: 5px; }
-.controls-row { display: flex; justify-content: space-around; align-items: center; font-size: 24px; margin-bottom: 20px; }
-.controls-row button { background: none; border: none; color: white; cursor: pointer; padding: 10px; outline: none; }
-.controls-row .main-play { font-size: 72px; }
-
-/* Range Input (Progress Bar) */
-input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #535353; outline: none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; }
-
-
-/* --- MINI PLAYER BAR --- */
-.mini-player {
-    position: fixed; bottom: 60px; left: 5px; right: 5px; height: 55px;
-    background: #404040; border-radius: 8px; display: flex;
-    align-items: center; padding: 0 10px; z-index: 50; cursor: pointer;
-    transform: translateY(100%); transition: transform 0.3s ease-in-out;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
-}
-.mini-player.active { transform: translateY(0); }
-.mini-track-info { flex-grow: 1; padding: 0 10px; }
-.mini-track-info h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini-track-info p { margin: 0; font-size: 12px; color: var(--text-faded); }
-.mini-controls button { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0 5px; }
-.mini-controls .mini-check { color: var(--spotify-green); font-size: 22px; padding: 0 8px; }
-
-
-/* --- FOOTER NAVIGATION --- */
-.footer-nav {
-    position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-    background: var(--spotify-dark-grey); display: flex;
-    justify-content: space-around; align-items: center; z-index: 55;
-    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100; 
+    display: flex; 
+    flex-direction: column; 
+    padding: 0; 
+    box-sizing: border-box;
+    transition: transform 0.3s ease-in-out; 
+    transform: translateY(100%); 
 }
 
-.nav-item {
-    color: var(--text-faded);
+.expanded-player.active { 
+    transform: translateY(0); 
+}
+
+.player-content-wrapper {
+    flex-grow: 1; 
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+    padding-bottom: 80px; 
+}
+
+/* Clickable Artist Name in Player Details */
+.player-details p {
+    /* Style to suggest clickability */
+    text-decoration: underline; 
+    text-underline-offset: 2px;
+}
+
+/* --- UPDATED ARTIST CARD STYLES (Player Card) --- */
+.artist-card-expanded {
+    background: var(--spotify-dark-grey); 
+    border-radius: 12px;
+    padding: 0; 
+    margin: 20px 16px; 
+    overflow: hidden;
+}
+.artist-banner-area {
+    height: 300px; 
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
+    color: white;
+    padding-left: 16px;
+    padding-right: 16px;
+    box-shadow: inset 0 -100px 50px -50px rgba(0, 0, 0, 0.7);
+}
+.artist-banner-area h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-faded);
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+.artist-details-overlay {
+    padding: 16px;
+    padding-top: 10px; 
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.artist-details-overlay h2 {
+    font-size: 32px; 
+    font-weight: 700;
+    margin: 0;
+}
+.artist-details-overlay p {
+    font-size: 16px;
+    color: var(--text-faded);
+    margin: 0;
+}
+.follow-btn-large {
+    align-self: flex-start;
+    padding: 10px 30px;
+    border: 1px solid white;
+    border-radius: 25px;
+    color: white;
+    background: none;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 14px;
+    margin-top: 15px;
+}
+
+/* ---------------------------------------------------- */
+/* --- NEW: ARTIST PAGE STYLES (Spotify Mimic) --- */
+/* ---------------------------------------------------- */
+.artist-page {
+    /* Overrides the global .app-page style for full bleed header */
+    padding: 0; 
+}
+
+.artist-header {
+    height: 400px; /* Large header area */
+    position: relative;
+    padding-top: 40px;
+    padding-left: 16px;
+    padding-right: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Push content to the bottom */
+    background-size: cover;
+    background-position: center 20%;
+    background-repeat: no-repeat;
+    /* Gradient overlay to ensure text is readable and track list blends */
+    box-shadow: inset 0 -120px 50px -20px var(--spotify-black);
+}
+
+.artist-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    /* Soften the background image and ensure text visibility */
+    background: linear-gradient(to top, var(--spotify-black) 0%, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.5) 100%);
+    z-index: 1;
+}
+
+.artist-header > * {
+    position: relative;
+    z-index: 2; /* Keep content above the pseudo-element overlay */
+}
+
+.artist-name-large {
+    font-size: 48px;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1.1;
+}
+
+.monthly-listeners {
+    font-size: 14px;
+    color: white;
+    font-weight: 600;
+    margin-top: 5px;
+    margin-bottom: 20px;
+}
+
+.artist-controls {
+    display: flex;
+    justify-content: flex-start;
     align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.follow-btn-artist-page {
+    padding: 10px 20px;
+    border: 1px solid white;
+    border-radius: 25px;
+    color: white;
+    background: none;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
     font-size: 12px;
-    padding-top: 5px;
+}
+
+.play-btn-artist-page {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--spotify-green);
+    color: var(--spotify-black);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     cursor: pointer;
 }
-.nav-item.active {
-    color: white;
+
+.artist-song-section {
+    padding-bottom: 50px;
+    background-color: var(--spotify-black); /* Ensure the content below the header is fully black */
+    padding-top: 10px;
 }
+.artist-song-section h2 {
+    font-size: 18px;
+    font-weight: 700;
+    padding-left: 16px;
+    margin-bottom: 10px;
+}
+
+/* Style for Popular Track Items */
+.popular-track-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px;
+    cursor: pointer;
+}
+
+.popular-track-item .track-rank {
+    width: 25px;
+    font-size: 16px;
+    text-align: right;
+    color: var(--text-faded);
+    margin-right: 12px;
+}
+
+.popular-track-item .track-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 2px;
+}
+
+.popular-track-item .track-info h3 {
+    /* Title text should be smaller on this page */
+    font-size: 15px;
+    font-weight: 400;
+}
+.popular-track-item .track-info p {
+    font-size: 12px;
+    color: var(--text-faded);
+}
+.popular-track-item.playing .track-rank {
+    color: var(--spotify-green);
+    font-weight: 700;
+    /* Hide rank when playing, show speaker icon */
+    display: none; 
+}
+.popular-track-item.playing::before {
+    content: '\f028'; /* Font Awesome Speaker Icon */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    color: var(--spotify-green);
+    font-size: 16px;
+    width: 25px;
+    text-align: center;
+    margin-right: 12px;
+}
+.popular-track-item.playing .track-info h3 {
+    color: var(--spotify-green);
+}
+.popular-track-item:not(.playing) .track-rank {
+    display: block;
+}
+
+
+/* --- MINI PLAYER & FOOTER NAV remain unchanged --- */
 
 </style>
 </head>
@@ -383,57 +445,112 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
             <i class="fas fa-th-large" style="margin-right: 0;"></i> </div>
 
         <ul class="track-list" id="musicContainer">
+            <div style="height: 800px; background: #121212; display: flex; justify-content: center; align-items: center; color: var(--text-faded);">
+                <p>More scrollable content added for testing.</p>
+            </div>
             </ul>
     </div>
-</div>
+    
+    
+    <div class="app-page artist-page" id="artistPage">
+        
+        <div class="artist-header" id="artistHeader">
+            <i class="fas fa-arrow-left" id="artistPageBackBtn" style="color:white; font-size: 24px; position:absolute; top: 20px; left: 16px; z-index: 10;"></i>
+            
+            <h1 class="artist-name-large" id="artistPageName"></h1>
+            <p class="monthly-listeners" id="artistPageListeners">1.2 Cr monthly listeners</p>
+            
+            <div class="artist-controls">
+                <button class="follow-btn-artist-page">Follow</button>
+                <div class="play-btn-artist-page" id="artistPagePlayBtn">
+                    <i class="fas fa-play"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="artist-song-section">
+            <h2>Popular</h2>
+            <ul class="track-list" id="artistPopularTracks">
+                </ul>
+            
+            <div style="padding: 16px; color: var(--text-faded); text-align: center; margin-top: 20px;">
+                <p>Other Albums and Singles content would go here.</p>
+            </div>
+        </div>
+        
+    </div>
+    </div>
 
 <div class="expanded-player" id="expandedPlayer">
-    <div class="player-header">
-        <i class="fas fa-chevron-down" id="minimizeBtn"></i>
-        <div class="playlist-indicator">
-            PLAYING FROM PLAYLIST<br>
-            <span id="playerTitleSmall" style="color:white; font-size:14px;"></span>
-        </div>
-        <i class="fas fa-ellipsis-v"></i>
-    </div>
-
-    <div class="player-art-container">
-        <img class="player-art" id="playerArt" src="" alt="Album Art">
-    </div>
-
-    <div class="player-details">
-        <div>
-            <h2 id="playerTrackTitle"></h2>
-            <p id="playerArtistName"></p>
-        </div>
-        <i class="fas fa-check-circle" id="likeBtn" style="color:var(--spotify-green); font-size:24px; cursor:pointer;"></i>
-    </div>
-
-    <div class="progress-container">
-        <input type="range" id="playerProgress" min="0" max="100" value="0">
-        <div class="time-stamps">
-            <span id="currentTime">0:00</span>
-            <span id="totalTime">0:00</span>
-        </div>
-    </div>
-
-    <div class="controls-row">
-        <button id="shuffleBtn"><i class="fas fa-random"></i></button>
-        <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
-        <button class="main-play" id="mainPlayBtn"><i class="fas fa-play"></i></button>
-        <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
-        <button id="repeatBtn"><i class="fas fa-redo-alt"></i></button>
-    </div>
     
-    <div class="controls-row" style="font-size: 18px; margin-top: -10px;">
-        <button><i class="fas fa-volume-up"></i></button>
-        <button><i class="fas fa-mobile-alt"></i></button>
-        <button><i class="fas fa-share-alt"></i></button>
-        <button id="downloadBtn"><i class="fas fa-download"></i></button> 
-    </div>
-    
-    <div class="lyrics-preview" style="text-align:center; padding: 10px; background:rgba(255,255,255,0.05); border-radius: 8px; margin-top: 10px;">
-        Lyrics preview
+    <div class="player-content-wrapper">
+        
+        <div class="player-header">
+            <i class="fas fa-chevron-down" id="minimizeBtn"></i>
+            <div class="playlist-indicator">
+                PLAYING FROM PLAYLIST<br>
+                <span id="playerTitleSmall" style="color:white; font-size:14px;"></span>
+            </div>
+            <i class="fas fa-ellipsis-v"></i>
+        </div>
+
+        <div class="player-art-container">
+            <img class="player-art" id="playerArt" src="" alt="Album Art">
+        </div>
+
+        <div class="player-details">
+            <div>
+                <h2 id="playerTrackTitle"></h2>
+                <p id="playerArtistName" style="cursor: pointer;"></p>
+            </div>
+            <i class="fas fa-check-circle" id="likeBtn" style="color:var(--spotify-green); font-size:24px; cursor:pointer;"></i>
+        </div>
+
+        <div class="progress-container">
+            <input type="range" id="playerProgress" min="0" max="100" value="0">
+            <div class="time-stamps">
+                <span id="currentTime">0:00</span>
+                <span id="totalTime">0:00</span>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <button id="shuffleBtn"><i class="fas fa-random"></i></button>
+            <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
+            <button class="main-play" id="mainPlayBtn"><i class="fas fa-play"></i></button>
+            <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
+            <button id="repeatBtn"><i class="fas fa-redo-alt"></i></button>
+        </div>
+        
+        <div class="controls-row" style="font-size: 18px; margin-top: -10px; margin-bottom: 20px;">
+            <button><i class="fas fa-volume-up"></i></button>
+            <button><i class="fas fa-mobile-alt"></i></button>
+            <button><i class="fas fa-share-alt"></i></button>
+            <button id="downloadBtn"><i class="fas fa-download"></i></button> 
+        </div>
+
+        <div class="scrollable-content">
+            
+            <div class="artist-card-expanded">
+                <div class="artist-banner-area" id="artistBannerArea">
+                    <h3 style="margin: 0;">About the artist</h3>
+                </div>
+                
+                <div class="artist-details-overlay">
+                    <h2 id="expandedArtistName"></h2>
+                    <p id="expandedMonthlyListeners"></p>
+                    <button class="follow-btn-large">Follow</button>
+                </div>
+            </div>
+            
+            <div class="lyrics-preview" style="text-align:center; padding: 15px; background:rgba(255,255,255,0.05); border-radius: 12px; margin: 10px 16px;">
+                <p style="margin: 0; font-size: 14px; color: var(--spotify-light-grey);">Lyrics will appear here</p>
+                <p style="font-size: 18px; font-weight: 700;">Scroll Down to Read!</p>
+            </div>
+            
+            <div style="height: 300px;"></div> 
+            
+        </div>
     </div>
 </div>
 
@@ -468,6 +585,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     </div>
 </div>
   <script type="module">
+// --- FIREBASE IMPORTS ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
@@ -499,10 +617,14 @@ const miniPlayBtn = document.getElementById('miniPlayBtn');
 const footerNavItems = document.querySelectorAll('.nav-item');
 const downloadBtn = document.getElementById('downloadBtn'); 
 const librarySearchIcon = document.getElementById('librarySearchIcon'); 
-// SEARCH ELEMENTS
-const searchInput = document.getElementById('searchInput');
-const searchResultsContainer = document.getElementById('searchResultsContainer');
-const browsingSection = document.getElementById('browsingSection');
+const playerArtistName = document.getElementById('playerArtistName'); // NEW: Get artist name in player
+
+// ARTIST PAGE ELEMENTS
+const artistHeader = document.getElementById('artistHeader');
+const artistPageName = document.getElementById('artistPageName');
+const artistPopularTracks = document.getElementById('artistPopularTracks');
+const artistPagePlayBtn = document.getElementById('artistPagePlayBtn');
+
 
 // --- HELPER FUNCTIONS ---
 function formatTime(seconds) {
@@ -533,6 +655,8 @@ function getTrackDurationFromURL(url, trackElement) {
 function navigateToPage(pageId) {
     document.querySelectorAll('.app-page').forEach(page => {
         page.classList.remove('active');
+        // Ensure that when switching pages, we reset scroll position for the new page
+        page.scrollTop = 0; 
     });
     document.getElementById(pageId).classList.add('active');
 
@@ -543,16 +667,10 @@ function navigateToPage(pageId) {
         }
     });
 
-    if (pageId === 'libraryPage' || pageId === 'searchPage') {
-        if (allTracks.length === 0) {
-            loadMusic();
-        }
-    }
-    
     if (pageId !== 'searchPage') {
-        searchInput.value = '';
-        searchResultsContainer.innerHTML = '';
-        browsingSection.classList.remove('hidden');
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchResultsContainer').innerHTML = '';
+        document.getElementById('browsingSection').classList.remove('hidden');
     }
 }
 
@@ -570,6 +688,11 @@ if (librarySearchIcon) {
         navigateToPage('searchPage');
     });
 }
+// New: Back button for Artist Page
+document.getElementById('artistPageBackBtn').addEventListener('click', () => {
+    // Navigate back to the Library or Search page (or home if unsure)
+    navigateToPage('libraryPage'); 
+});
 
 
 // --- PLAYER CONTROLS ---
@@ -602,10 +725,12 @@ function loadTrack(index, autoPlay = true) {
 
     currentTrackIndex = index;
     const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Art";
-    
+    const artistImageSource = track.artist_image_base64 || ''; 
+
     currentAudio.src = track.url;
     currentAudio.load();
 
+    // Update Player Details
     document.getElementById('playerArt').src = imageSource;
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = track.artist;
@@ -615,6 +740,20 @@ function loadTrack(index, autoPlay = true) {
     document.getElementById('miniTitle').textContent = track.title;
     document.getElementById('miniArtist').textContent = track.artist;
     miniPlayer.classList.add('active');
+    
+    // Updated Artist Card Display Logic (inside Expanded Player)
+    document.getElementById('expandedArtistName').innerHTML = `${track.artist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
+    document.getElementById('expandedMonthlyListeners').textContent = '32.5L monthly listeners'; 
+
+    const artistBannerArea = document.getElementById('artistBannerArea');
+    if (artistImageSource) {
+         artistBannerArea.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url('${artistImageSource}')`;
+         artistBannerArea.style.backgroundColor = 'transparent';
+    } else {
+         artistBannerArea.style.backgroundImage = 'none';
+         artistBannerArea.style.backgroundColor = '#303030';
+    }
+    
 
     document.getElementById('playerProgress').value = 0;
     document.getElementById('currentTime').textContent = '0:00';
@@ -644,7 +783,7 @@ function prevTrack() {
 
 function updatePlaylistView() {
     const updateItems = (container) => {
-        container.querySelectorAll('.track-item').forEach(item => {
+        container.querySelectorAll('.track-item, .popular-track-item').forEach(item => {
             item.classList.remove('playing');
             if (parseInt(item.dataset.index) === currentTrackIndex && isPlaying) {
                 item.classList.add('playing');
@@ -653,27 +792,7 @@ function updatePlaylistView() {
     }
     updateItems(document.getElementById('musicContainer'));
     updateItems(document.getElementById('searchResultsContainer'));
-}
-
-function downloadCurrentTrack() {
-    if (currentTrackIndex === -1) return;
-
-    const track = allTracks.find(t => t.index === currentTrackIndex);
-    if (!track || !track.url) {
-        alert("Audio URL not available for download.");
-        return;
-    }
-
-    const a = document.createElement('a');
-    a.href = track.url;
-    const filename = `${track.title} - ${track.artist || 'Unknown'}.mp3`;
-    a.download = filename; 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    console.log(`Attempting to download: ${filename} from ${track.url}`);
-    alert(`Downloading "${track.title}"... (Check your browser downloads)`);
+    updateItems(document.getElementById('artistPopularTracks'));
 }
 
 // Attach player listeners once
@@ -690,46 +809,55 @@ miniPlayer.addEventListener('click', (e) => {
         document.getElementById('expandedPlayer').classList.add('active');
     }
 });
-document.getElementById('playerProgress').addEventListener('input', () => {
-    const progress = document.getElementById('playerProgress');
-    if(isNaN(currentAudio.duration)) return;
-    const seekTo = (progress.value / 100) * currentAudio.duration;
-    currentAudio.currentTime = seekTo;
+// Attach event listener to Artist Name in the Expanded Player
+playerArtistName.addEventListener('click', (e) => {
+    const artistName = e.target.textContent.trim();
+    if (artistName) {
+        document.getElementById('expandedPlayer').classList.remove('active');
+        loadArtistPage(artistName);
+    }
 });
-currentAudio.addEventListener('timeupdate', () => {
-    if(isNaN(currentAudio.duration) || currentAudio.duration === 0) return;
-    const progress = (currentAudio.currentTime / currentAudio.duration) * 100;
-    document.getElementById('playerProgress').value = progress;
-    document.getElementById('currentTime').textContent = formatTime(currentAudio.currentTime);
-});
-currentAudio.addEventListener('ended', nextTrack);
-downloadBtn.addEventListener('click', downloadCurrentTrack);
 
 
 // --- CORE DATA LOADING & RENDERING FUNCTIONS ---
 
-function createTrackListItem(data) {
+function createTrackListItem(data, type = 'list') {
     const item = document.createElement('li');
-    item.className = 'track-item';
     // Use the actual track index for the loadTrack function
     item.dataset.index = data.index; 
-
+    
     const imageSource = data.image_base64 || "https://via.placeholder.com/50/121212/FFFFFF?text=A";
     
-    item.innerHTML = `
-        <img class="track-img" src="${imageSource}" alt="Album Art">
-        <div class="track-info">
-            <h3>${data.title}</h3>
-            <p>Single • ${data.artist || 'Unknown Artist'}</p>
-        </div>
-    `;
-    
+    if (type === 'list') {
+        item.className = 'track-item';
+        item.innerHTML = `
+            <img class="track-img" src="${imageSource}" alt="Album Art">
+            <div class="track-info">
+                <h3>${data.title}</h3>
+                <p>Single • ${data.artist || 'Unknown Artist'}</p>
+            </div>
+        `;
+    } else if (type === 'popular') {
+        // New structure for popular songs on the artist page
+        item.className = 'popular-track-item';
+        // Placeholder for rank, will be set externally
+        const rank = parseInt(data.rank) + 1;
+        item.innerHTML = `
+            <span class="track-rank">${rank}</span>
+            <img class="track-img" src="${imageSource}" alt="Album Art">
+            <div class="track-info">
+                <h3>${data.title}</h3>
+                <p>${data.artist || 'Unknown Artist'}</p>
+            </div>
+            <i class="fas fa-ellipsis-v" style="color:var(--text-faded); margin-left: auto;"></i>
+        `;
+    }
+
     item.addEventListener('click', () => {
-        // Pass the correct unique index to load the song
         loadTrack(data.index, true); 
     });
     
-    // Only apply immediate display for the main library list
+    // Apply animation visibility if needed (for search results)
     if (!data.animationIndex) {
         item.style.opacity = 1;
         item.style.transform = 'translateY(0)';
@@ -746,10 +874,12 @@ async function loadMusic() {
         querySnapshot.forEach(doc => {
             allTracks.push({ 
                 id: doc.id, 
-                index: index++, // This is the unique, permanent index
+                index: index++, 
                 ...doc.data() 
             });
         });
+        // Sort tracks alphabetically by title for a stable list
+        allTracks.sort((a, b) => a.title.localeCompare(b.title));
         console.log(`Loaded ${allTracks.length} tracks.`);
     }
 
@@ -770,68 +900,69 @@ async function loadMusic() {
 }
 
 
-// --- SEARCH FUNCTIONALITY ---
+// --- NEW ARTIST PAGE LOGIC ---
 
-function renderSearchResults(results) {
-    searchResultsContainer.innerHTML = '';
-    if (results.length === 0) {
-        searchResultsContainer.innerHTML = `<li style="padding: 16px; color: var(--text-faded);">No results found.</li>`;
+function loadArtistPage(artistName) {
+    if (!artistName) return;
+
+    const artistSongs = allTracks.filter(track => 
+        track.artist && track.artist.toLowerCase().includes(artistName.toLowerCase())
+    );
+
+    if (artistSongs.length === 0) {
+        alert(`No songs found for artist: ${artistName}`);
         return;
     }
     
-    results.forEach((data, i) => {
-        // Create an object for the list item. We only add a temporary index (i) 
-        // for the visual staggered animation, but the track's real index (data.index)
-        // is preserved for playing.
-        const listItemData = { 
-            ...data, 
-            animationIndex: i 
-        }; 
+    // Sort songs by a mock popularity (e.g., just take the first 10, or shuffle for variety)
+    const popularSongs = artistSongs.slice(0, 10).map((song, rank) => ({ ...song, rank }));
+    
+    // Get the artist image (using the first song as a source)
+    const artistImage = artistSongs[0].artist_image_base64 || '';
+
+    // 1. Update the HTML elements
+    artistPageName.textContent = artistName;
+    
+    // Apply the artist banner image
+    if (artistImage) {
+         artistHeader.style.backgroundImage = `url('${artistImage}')`;
+    } else {
+         artistHeader.style.backgroundImage = 'none';
+         artistHeader.style.backgroundColor = '#303030';
+    }
+
+    // 2. Clear and render the popular tracks list
+    artistPopularTracks.innerHTML = '';
+    popularSongs.forEach((data) => {
+        const item = createTrackListItem(data, 'popular');
+        artistPopularTracks.appendChild(item);
         
-        const item = createTrackListItem(listItemData);
-        
-        // Manually handle the staggered search animation
+        // Staggered animation
         item.style.opacity = 0;
         item.style.transform = 'translateY(10px)';
         setTimeout(() => {
             item.classList.add('show');
-        }, i * 50); 
-        
-        searchResultsContainer.appendChild(item);
+        }, data.rank * 50); 
     });
-    updatePlaylistView();
+    
+    // 3. Set the Play button action for the whole list
+    artistPagePlayBtn.onclick = () => {
+        if (popularSongs.length > 0) {
+            // Start playing the first song in the popular list
+            loadTrack(popularSongs[0].index, true); 
+        }
+    };
+    
+    // 4. Navigate to the new page
+    navigateToPage('artistPage');
+    updatePlaylistView(); // Highlight the currently playing song if applicable
 }
-
-
-searchInput.addEventListener('input', async (e) => { 
-    const query = e.target.value.toLowerCase().trim();
-    
-    if (allTracks.length === 0) {
-        await loadMusic();
-    }
-    
-    if (query.length > 0) {
-        browsingSection.classList.add('hidden');
-        
-        const filteredTracks = allTracks.filter(track => {
-            return (
-                (track.title && track.title.toLowerCase().includes(query)) ||
-                (track.artist && track.artist.toLowerCase().includes(query))
-            );
-        });
-        
-        renderSearchResults(filteredTracks);
-        
-    } else {
-        browsingSection.classList.remove('hidden');
-        searchResultsContainer.innerHTML = '';
-    }
-});
 
 
 // Initialize the application: start on the library page and load data
 loadMusic();
 navigateToPage('libraryPage');
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
