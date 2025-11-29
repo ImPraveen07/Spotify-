@@ -190,6 +190,46 @@ body {
     display: none; 
 }
 
+/* --- ARTIST ITEM STYLE (For Library > Artists tab) --- */
+.artist-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.artist-item:hover {
+    background-color: var(--spotify-dark-grey);
+}
+
+.artist-img {
+    width: 60px; /* Slightly larger image */
+    height: 60px;
+    object-fit: cover;
+    margin-right: 12px;
+    border-radius: 50%; /* Make it circular like in the screenshot */
+}
+
+.artist-info {
+    flex-grow: 1;
+    min-width: 0; 
+}
+
+.artist-info h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.artist-info p {
+    margin: 2px 0 0 0;
+    font-size: 13px;
+    color: var(--text-faded);
+}
+/* --- END ARTIST ITEM STYLE --- */
+
+
 /* --- Search Page --- */
 .search-page {
     padding-bottom: 0;
@@ -264,7 +304,7 @@ body {
 
 
 /* ---------------------------------------------------- */
-/* --- EXPANDED PLAYER STYLES (UPDATED FOR SCROLL & RESPONSIVENESS) --- */
+/* --- EXPANDED PLAYER STYLES (Collapsible Header & Popular List) --- */
 /* ---------------------------------------------------- */
 .expanded-player {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -299,29 +339,37 @@ body {
 
 /* Ensure all primary sections have horizontal padding */
 .player-header,
-.player-art-container, 
 .player-details,
 .progress-container,
-.controls-row,
-.scrollable-content > div:not(.artist-card-expanded) { /* Exclude the full card, apply to inner content if needed */
+.controls-row {
     padding-left: 16px;
     padding-right: 16px;
     width: 100%;
     box-sizing: border-box;
 }
 
+/* CRITICAL FOR SCROLL ANIMATION: The header remains at the top */
 .player-header { 
     display: flex; justify-content: space-between; align-items: center; 
     margin-bottom: 20px; padding-top: 20px;
+    position: sticky; /* Sticky header */
+    top: 0;
+    z-index: 50; /* Above the scrolling content */
+    /* Dynamic background applied by JS on scroll */
+    background-color: transparent; 
+    transition: background-color 0.1s ease-in;
 }
 .player-header i { font-size: 24px; cursor: pointer; }
 .player-header .playlist-indicator { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--text-faded); }
 
+/* CRITICAL FOR COLLAPSING EFFECT: This is the container for the shrinking image */
 .player-art-container { 
     display: flex; justify-content: center; align-items: center; 
-    /* FIX 1: Set equal padding for visual centering of the image */
     padding-top: 30px; 
     padding-bottom: 30px; 
+    /* Padding removed here for the new structure, but keeping it for a fallback if needed */
+    padding-left: 16px;
+    padding-right: 16px;
 }
 .player-art { 
     width: 80vw; /* Use viewport width for proportional scaling */
@@ -329,8 +377,9 @@ body {
     aspect-ratio: 1 / 1; 
     border-radius: 8px; 
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); 
-    /* NEW: Add transition for smooth resizing */
-    transition: width 0.3s ease-out; 
+    /* NEW: Add transition for smooth resizing and scaling origin */
+    transition: all 0.2s ease-out; 
+    transform-origin: center center;
 }
 
 .player-details { margin: 0 0 20px 0; display: flex; justify-content: space-between; align-items: flex-end; }
@@ -348,22 +397,21 @@ body {
 input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #535353; outline: none; }
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; }
 
-/* --- UPDATED ARTIST CARD STYLES (ADDED LIQUID GLASS EFFECT) --- */
+/* --- UPDATED ARTIST CARD STYLES (COLLAPSING SECTION) --- */
 .artist-card-expanded {
     /* Subtle Liquid Glass Effect */
-    background: rgba(30, 30, 30, 0.7); /* Slightly transparent background */
-    backdrop-filter: blur(10px);        /* Frosted Glass Blur */
-    -webkit-backdrop-filter: blur(10px);/* For Safari */
-    
-    border-radius: 12px;
+    background: transparent;
+    /* The banner is now part of the scrolling content */
+    margin: 0; 
     padding: 0; 
-    margin: 20px 16px; 
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle white border */
+    border: none; 
 }
 
+/* CRITICAL: Artist Banner Area (Lana Del Rey image) */
 .artist-banner-area {
-    height: 300px; 
+    /* Height must be large enough to trigger scroll before content starts */
+    height: 350px; 
     position: relative;
     background-size: cover;
     background-position: center;
@@ -375,23 +423,19 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     padding-left: 16px;
     padding-right: 16px;
     padding-bottom: 10px; 
-    box-shadow: inset 0 -100px 50px -50px rgba(0, 0, 0, 0.7);
-}
-
-.artist-banner-area h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-faded);
-    margin-top: 0; 
-    margin-bottom: 5px; 
+    /* Fading gradient to hide scroll artifacts */
+    box-shadow: inset 0 -150px 70px -50px rgba(0, 0, 0, 0.7);
+    transition: background-image 0.5s ease;
 }
 
 .artist-details-overlay {
-    padding: 16px;
+    /* This section contains the big name, monthly listeners, and follow button */
     padding-top: 10px; 
+    padding-bottom: 20px;
     display: flex;
     flex-direction: column;
     gap: 5px;
+    transition: opacity 0.2s ease-out; /* For fade out on scroll */
 }
 
 .artist-details-overlay h2 {
@@ -432,12 +476,79 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     border: 1px solid rgba(255, 255, 255, 0.1); 
 }
 
-/* Hidden old elements */
-.artist-image-expanded-banner, .artist-info-row, .artist-bio {
-    display: none !important;
+/* --- NEW POPULAR TRACKS STYLES (MATCHING SCREENSHOT) --- */
+.popular-title {
+    padding: 16px;
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 20px;
+    margin-bottom: 0;
 }
-.follow-btn-small {
+
+/* Style for track items *inside* the expanded player (Popular tracks) */
+#artistPopularTracks .track-item {
+    padding: 8px 16px;
+    display: grid;
+    /* Define 4 columns: Number, Image, Info, Controls */
+    grid-template-columns: 20px 40px 1fr 40px; 
+    gap: 12px;
+}
+
+#artistPopularTracks .track-item:hover {
+    background-color: var(--spotify-dark-grey);
+}
+
+#artistPopularTracks .track-item .track-img {
+    width: 40px; 
+    height: 40px;
+    border-radius: 2px;
+    margin-right: 0;
+}
+
+/* Element for track number */
+.track-number {
+    font-size: 16px;
+    color: var(--text-faded);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The track info container inside the grid */
+#artistPopularTracks .track-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-right: 0;
+}
+
+#artistPopularTracks .track-info p {
+    font-size: 13px;
+    color: var(--text-faded);
+}
+
+/* Container for the checkmark and options dots */
+.track-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.track-controls i {
+    color: var(--text-faded);
+    font-size: 18px;
+}
+.track-controls .check-icon {
+    color: var(--spotify-green);
+    font-size: 20px;
+}
+/* Hide track duration in this view */
+#artistPopularTracks .track-duration {
     display: none;
+}
+
+.artist-pick-section {
+    margin-bottom: 30px;
 }
 
 
@@ -497,11 +608,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         width: 100%;
     }
     .player-header,
-    .player-art-container, 
     .player-details,
     .progress-container,
-    .controls-row,
-    .scrollable-content > div {
+    .controls-row {
         /* Remove padding on wrappers, rely on max-width */
         padding-left: 0;
         padding-right: 0;
@@ -563,12 +672,12 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         </div>
         
         <div class="library-filter-tabs">
-            <div class="filter-tab active">Playlists</div>
-            <div class="filter-tab">Albums</div>
-            <div class="filter-tab">Artists</div>
+            <div class="filter-tab active" data-content="playlists">Playlists</div>
+            <div class="filter-tab" data-content="albums">Albums</div>
+            <div class="filter-tab" data-content="artists">Artists</div>
         </div>
 
-        <div class="library-controls">
+        <div class="library-controls" id="libraryControls">
             <div style="display:flex; align-items:center;">
                 <i class="fas fa-arrow-up"></i>
                 <i class="fas fa-arrow-down" style="margin-right: 15px;"></i>
@@ -580,7 +689,20 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
             <div style="height: 800px; background: #121212; display: flex; justify-content: center; align-items: center; color: var(--text-faded);">
                 <p>More scrollable content added for testing.</p>
             </div>
+        </ul>
+        
+        <ul class="track-list" id="artistContainer" style="display:none;">
             </ul>
+        
+        <ul class="track-list" id="tracksByArtistContainer" style="display:none;">
+             <li id="backToArtists" class="track-item" style="opacity: 1; transform: translateY(0); border-bottom: 1px solid #181818;">
+                <i class="fas fa-chevron-left" style="font-size: 24px; margin-right: 20px;"></i>
+                <div class="track-info">
+                    <h3>Back to Artists</h3>
+                    <p style="color:var(--spotify-green); font-weight: 600;">View All</p>
+                </div>
+            </li>
+        </ul>
     </div>
 </div>
 
@@ -600,7 +722,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         <div class="player-art-container">
             <img class="player-art" id="playerArt" src="" alt="Album Art">
         </div>
-
+        
         <div class="player-details">
             <div>
                 <h2 id="playerTrackTitle"></h2>
@@ -634,30 +756,37 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
 
         <div class="scrollable-content">
             
-            <div style="height: 10vh;"></div> 
-            
             <div class="artist-card-expanded">
                 
                 <div class="artist-banner-area" id="artistBannerArea">
-                    <h3 style="margin: 0;">About the artist</h3>
+                    <div class="artist-details-overlay">
+                        <h2 id="expandedArtistName"></h2>
+                        <p id="expandedMonthlyListeners"></p>
+                        <button class="follow-btn-large">Follow</button>
+                    </div>
                 </div>
-                
-                <div class="artist-details-overlay">
-                    <h2 id="expandedArtistName"></h2>
-                    <p id="expandedMonthlyListeners"></p>
-                    <button class="follow-btn-large">Follow</button>
+            </div>
+
+            <h3 class="popular-title">Popular</h3>
+            <ul class="track-list" id="artistPopularTracks">
+                </ul>
+
+            <div class="artist-pick-section">
+                <h3 class="popular-title">Artist Pick</h3>
+                <div style="padding: 0 16px;">
+                    <div style="height: 100px; background: #282828; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: var(--text-faded);">
+                        <p>Artist Pick Playlist Placeholder</p>
+                    </div>
                 </div>
-                
-                </div>
+            </div>
+            
             <div class="lyrics-preview">
                 <p style="margin: 0; font-size: 14px; color: var(--spotify-light-grey);">Lyrics will appear here</p>
                 <p style="font-size: 18px; font-weight: 700;">Scroll Down to Read!</p>
             </div>
             
-            <div style="height: 300px;"></div> 
-            
+            <div style="height: 100px;"></div> </div>
         </div>
-    </div>
 </div>
 
 <div class="mini-player" id="miniPlayer">
@@ -690,7 +819,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         <span>Premium</span>
     </div>
 </div>
-  <script type="module">
+ <script type="module">
 // --- FIREBASE IMPORTS ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
@@ -710,15 +839,19 @@ const db = getFirestore(app);
 
 // --- GLOBAL STATE ---
 let allTracks = [];
-// currentTrackIndex will hold the *unique 'index' property* of the track, not the array index.
+let allArtists = new Map(); // Map to store unique artists and their details
 let currentTrackIndex = -1; 
 let currentAudio = new Audio();
-    
-let currentPosition = 0; // to track current playback time (currently redundant, using currentAudio.currentTime)
-let isPlaying = false;   // your existing playback state
+let isPlaying = false;   
 
 // --- DOM ELEMENTS ---
+const libraryPage = document.getElementById('libraryPage');
 const musicContainer = document.getElementById('musicContainer');
+const artistContainer = document.getElementById('artistContainer');
+const tracksByArtistContainer = document.getElementById('tracksByArtistContainer');
+const artistPopularTracksContainer = document.getElementById('artistPopularTracks'); // NEW
+const filterTabs = document.querySelectorAll('.library-filter-tabs .filter-tab');
+const libraryControls = document.getElementById('libraryControls');
 const expandedPlayer = document.getElementById('expandedPlayer');
 const miniPlayer = document.getElementById('miniPlayer');
 const mainPlayBtn = document.getElementById('mainPlayBtn');
@@ -730,6 +863,12 @@ const librarySearchIcon = document.getElementById('librarySearchIcon');
 const searchInput = document.getElementById('searchInput');
 const searchResultsContainer = document.getElementById('searchResultsContainer');
 const browsingSection = document.getElementById('browsingSection');
+const backToArtistsBtn = document.getElementById('backToArtists');
+// COLLAPSIBLE HEADER ELEMENTS
+const scrollContentWrapper = document.querySelector('.player-content-wrapper');
+const playerArt = document.getElementById('playerArt');
+const playerHeader = document.querySelector('.player-header');
+
 
 // NEW HELPER: Get the array index from the unique track index
 function getArrayIndexOfTrack(trackIndex) {
@@ -746,7 +885,6 @@ function formatTime(seconds) {
 
 function getTrackDurationFromURL(url, trackElement) {
     const tempAudio = new Audio(url);
-    
     tempAudio.preload = 'metadata';
 
     tempAudio.onloadedmetadata = () => {
@@ -776,9 +914,8 @@ function navigateToPage(pageId) {
     });
 
     if (pageId === 'libraryPage' || pageId === 'searchPage') {
-        // Load music only if the array is empty
         if (allTracks.length === 0) {
-            loadMusic();
+            loadMusicAndArtists(); // Load all data on app start
         }
     }
     
@@ -840,25 +977,23 @@ function updatePlayButtonUI(state) {
     }
 }
 
-// =======================
-// MEDIA SESSION & NOTIFICATION (CRITICAL FIXES HERE)
-// =======================
-
 function updateMediaNotification() {
     const currentTrack = allTracks.find(t => t.index === currentTrackIndex);
     if (!currentTrack) return;
     
+    // FIX: Strictly use the album/song image for the notification/media session art.
+    const notificationImage = currentTrack.image_base64 || "s512.png"; 
+    
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: currentTrack.title,       // <-- Correct property
-            artist: currentTrack.artist,    // <-- Correct property
+            title: currentTrack.title,      
+            artist: currentTrack.artist,    
             album: currentTrack.album || '', 
             artwork: [
-                { src: currentTrack.image_base64 || "s512.png", sizes: '512x512', type: 'image/jpeg' }
+                { src: notificationImage, sizes: '512x512', type: 'image/jpeg' } 
             ]
         });
 
-        // Set Position State for notification time updates
         if ("setPositionState" in navigator.mediaSession) {
              navigator.mediaSession.setPositionState({
                  duration: currentAudio.duration || 0,
@@ -869,9 +1004,7 @@ function updateMediaNotification() {
     }
 }
 
-// Keep MediaSession position updated while playing
 currentAudio.addEventListener('timeupdate', () => {
-    // This is the core time update loop. The global variable currentPosition is not needed.
     if (isPlaying) updateMediaNotification();
 });
 
@@ -882,27 +1015,24 @@ if ("Notification" in window && Notification.permission !== "granted") {
 
 function updateMediaSession(track, imageSrc) {
     if (!("mediaSession" in navigator)) return;
-
-    // Setting metadata is now handled by updateMediaNotification, but we set handlers here
     
     navigator.mediaSession.setActionHandler("play", () => {
         currentAudio.play();
         isPlaying = true;
         updatePlayButtonUI("pause");
-        updateMediaNotification(); // Update notification on action
+        updateMediaNotification(); 
     });
 
     navigator.mediaSession.setActionHandler("pause", () => {
         currentAudio.pause();
         isPlaying = false;
         updatePlayButtonUI("play");
-        updateMediaNotification(); // Update notification on action
+        updateMediaNotification(); 
     });
 
     navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
     navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
 
-    // Call updateMediaNotification once here to initialize the notification/session state
     updateMediaNotification();
     showSongNotification(track, imageSrc);
 }
@@ -912,15 +1042,14 @@ function showSongNotification(track, imageSrc) {
 
     const options = {
         body: track.artist || "Playback in progress",
-        icon: imageSrc,
-        badge: imageSrc,
+        icon: imageSrc, // Use song image
+        badge: imageSrc, // Use song image
         tag: "now-playing",
         renotify: true
     };
 
     navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) {
-            // Service worker notifications can be richer, but basic notification is used here.
             reg.showNotification(track.title || "Unknown Track", options);
         } else {
             new Notification(track.title || "Unknown Track", options);
@@ -929,27 +1058,28 @@ function showSongNotification(track, imageSrc) {
 }
 
 // =======================
-// LOAD TRACK (CRITICALLY CORRECTED & CONSOLIDATED)
+// LOAD TRACK
 // =======================
 
-function loadTrack(index, autoPlay = true) {
-    // 1. Find the track data using the unique index
+async function loadTrack(index, autoPlay = true) {
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
 
-    // 2. State & Audio Prep
     currentTrackIndex = index;
     currentAudio.src = track.url;
-    currentAudio.load(); // Load metadata for duration
+    currentAudio.load(); 
 
-    // Pause old track if playing
     if (isPlaying) {
         currentAudio.pause();
         isPlaying = false;
     }
 
-    const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Art";
-    const artistImageSource = track.artist_image_base64 || ''; 
+    const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Album+Art";
+    
+    // Fetch artist image from the dedicated artists map for the banner
+    const artistData = allArtists.get(track.artist.toLowerCase());
+    // Use a high-quality artist image for the banner
+    const artistImageSource = artistData ? artistData.image_base64_highres || artistData.image_base64 : ''; 
 
     // 3. Update Player UI elements
     document.getElementById('playerArt').src = imageSource;
@@ -960,21 +1090,28 @@ function loadTrack(index, autoPlay = true) {
     document.getElementById('miniArt').src = imageSource;
     document.getElementById('miniTitle').textContent = track.title;
     document.getElementById('miniArtist').textContent = track.artist;
-    miniPlayer.classList.add('active'); // Ensure miniPlayer is visible
+    miniPlayer.classList.add('active'); 
     
     // 4. Update Artist Card UI elements
     document.getElementById('expandedArtistName').innerHTML = `${track.artist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
-    document.getElementById('expandedMonthlyListeners').textContent = '32.5L monthly listeners'; 
+    // Mock monthly listeners value
+    document.getElementById('expandedMonthlyListeners').textContent = '6.2Cr monthly listeners'; 
     const artistBannerArea = document.getElementById('artistBannerArea');
+    
+    // Apply the artist image as a banner and a dark gradient overlay
     if (artistImageSource) {
-         artistBannerArea.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url('${artistImageSource}')`;
+         artistBannerArea.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.7)), url('${artistImageSource}')`;
          artistBannerArea.style.backgroundColor = 'transparent';
     } else {
          artistBannerArea.style.backgroundImage = 'none';
          artistBannerArea.style.backgroundColor = '#303030';
     }
     
+    // NEW: Load the popular track list for the expanded player view
+    renderExpandedPlayerPopularTracks(track.artist);
+    
     // 5. Update Expanded Player's main background (Simplified)
+    // For a more dynamic look, you can derive the color from the album art
     expandedPlayer.style.background = `linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%)`;
 
     // 6. Reset progress UI
@@ -987,18 +1124,21 @@ function loadTrack(index, autoPlay = true) {
 
     // 8. Playback and UI State
     if (autoPlay) {
-        isPlaying = false; // Set to false so togglePlayPause calls play()
+        isPlaying = false; 
         togglePlayPause();
 
-        // Ensure expanded player opens on a track click
         document.getElementById('expandedPlayer').classList.add('active'); 
         document.body.classList.add('lock-scroll'); 
         expandedPlayer.style.transform = ''; 
     } else {
-        // If not auto-playing (like initial load), ensure play buttons show 'Play'
         updatePlayButtonUI("play");
     }
 
+    // Reset scroll position to the top when a new track is loaded
+    scrollContentWrapper.scrollTop = 0;
+    // Manually trigger the scroll handler once to set the initial header state
+    updateCollapsibleHeader();
+    
     updatePlaylistView();
 }
 
@@ -1009,7 +1149,6 @@ function nextTrack() {
     let nextArrayIndex = (currentArrayIndex + 1) % allTracks.length;
     const nextTrackData = allTracks[nextArrayIndex];
     if (nextTrackData) {
-        // Use autoPlay: true when skipping tracks
         loadTrack(nextTrackData.index, true); 
     }
 }
@@ -1021,7 +1160,6 @@ function prevTrack() {
     let prevArrayIndex = (currentArrayIndex - 1 + allTracks.length) % allTracks.length;
     const prevTrackData = allTracks[prevArrayIndex];
     if (prevTrackData) {
-        // Use autoPlay: true when skipping tracks
         loadTrack(prevTrackData.index, true);
     }
 }
@@ -1030,14 +1168,16 @@ function updatePlaylistView() {
     const updateItems = (container) => {
         container.querySelectorAll('.track-item').forEach(item => {
             item.classList.remove('playing');
-            // Check if it's the current track, and if the song is currently playing
             if (parseInt(item.dataset.index) === currentTrackIndex && isPlaying) {
                 item.classList.add('playing');
             }
         });
     }
-    updateItems(document.getElementById('musicContainer'));
-    updateItems(document.getElementById('searchResultsContainer'));
+    // Update all track containers
+    updateItems(musicContainer);
+    updateItems(searchResultsContainer);
+    updateItems(tracksByArtistContainer);
+    updateItems(artistPopularTracksContainer); // Include popular tracks list
 }
 
 function downloadCurrentTrack() {
@@ -1068,22 +1208,17 @@ document.getElementById('nextBtn').addEventListener('click', nextTrack);
 document.getElementById('prevBtn').addEventListener('click', prevTrack);
 
 document.getElementById('minimizeBtn').addEventListener('click', () => {
-    // Minimize (Back) button functionality
     document.getElementById('expandedPlayer').classList.remove('active');
     document.body.classList.remove('lock-scroll');
-    // Ensure inline transform is removed when minimizing via button as well
     expandedPlayer.style.transform = ''; 
 });
 
 miniPlayer.addEventListener('click', (e) => {
-    // Prevent the mini-player click from overriding the mini-play button click
     if(e.target.closest('#miniPlayBtn') || e.target.closest('.mini-check')) return; 
     
-    // FIX: Open the expanded player when the mini-player area is tapped
     if (currentTrackIndex !== -1) {
         expandedPlayer.classList.add('active');
         document.body.classList.add('lock-scroll');
-        // CRITICAL FIX: Ensure the inline transform is reset so the CSS animation starts correctly
         expandedPlayer.style.transform = ''; 
     }
 });
@@ -1103,31 +1238,157 @@ currentAudio.addEventListener('timeupdate', () => {
 currentAudio.addEventListener('ended', nextTrack);
 downloadBtn.addEventListener('click', downloadCurrentTrack);
 
+// NEW: Back button for tracks by artist view
+backToArtistsBtn.addEventListener('click', () => {
+    showArtists();
+});
 
-// --- CORE DATA LOADING & RENDERING FUNCTIONS ---
+// ===================================
+// LIBRARY VIEW SWITCHING LOGIC
+// ===================================
 
-function createTrackListItem(data) {
+function setActiveLibraryView(viewId) {
+    // Hide all view containers first
+    musicContainer.style.display = 'none';
+    artistContainer.style.display = 'none';
+    tracksByArtistContainer.style.display = 'none';
+
+    // Show the selected container
+    document.getElementById(viewId).style.display = 'block';
+
+    // Update library controls visibility (optional, but good practice)
+    libraryControls.style.visibility = viewId === 'musicContainer' ? 'visible' : 'hidden';
+
+    // Update filter tabs
+    filterTabs.forEach(tab => tab.classList.remove('active'));
+    const activeTab = Array.from(filterTabs).find(tab => tab.getAttribute('data-content') + 'Container' === viewId);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
+}
+
+filterTabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        const contentType = e.target.getAttribute('data-content');
+        
+        // Hide track-by-artist view if switching tabs
+        if(tracksByArtistContainer.style.display === 'block') {
+            tracksByArtistContainer.style.display = 'none';
+        }
+
+        if (contentType === 'artists') {
+            showArtists();
+        } else {
+            // Default: Show music/playlists/albums list
+            setActiveLibraryView('musicContainer');
+            // Re-render music container to ensure latest highlight
+            loadMusic(); 
+        }
+    });
+});
+
+// ===================================
+// CORE DATA LOADING & RENDERING FUNCTIONS
+// ===================================
+
+async function loadMusicAndArtists() {
+    if (allTracks.length === 0) {
+        console.log("Loading all data from Firebase...");
+        
+        // 1. Load Tracks
+        const musicSnapshot = await getDocs(collection(db, "music"));
+        let index = 0;
+        musicSnapshot.forEach(doc => {
+            // Mock play_count for the popular list effect
+            const data = doc.data();
+            const mockPlayCount = Math.floor(Math.random() * (2500000000 - 500000000 + 1)) + 500000000;
+            allTracks.push({ 
+                id: doc.id, 
+                index: index++, 
+                play_count: data.play_count || mockPlayCount, 
+                ...data 
+            });
+        });
+        console.log(`Loaded ${allTracks.length} tracks.`);
+
+        // 2. Load Artists
+        const artistSnapshot = await getDocs(collection(db, "artists"));
+        artistSnapshot.forEach(doc => {
+            const data = doc.data();
+            // Store by normalized name for easy lookup
+            allArtists.set(data.name.toLowerCase(), {
+                // Mock high-res image for the banner (in a real app, this would be a separate field)
+                image_base64_highres: data.image_base64, 
+                ...data
+            });
+        });
+        console.log(`Loaded ${allArtists.size} unique artists.`);
+    }
+
+    // Load initial music list
+    loadMusic();
+    
+    // Determine the starting track
+    if (allTracks.length > 0 && currentTrackIndex === -1) {
+        // Choose a track that has an artist image for a better first load experience
+        const firstTrack = allTracks.find(t => allArtists.has(t.artist.toLowerCase())) || allTracks[0];
+        currentTrackIndex = firstTrack.index; 
+        loadTrack(currentTrackIndex, false); 
+    }
+}
+
+
+function createTrackListItem(data, containerType, trackNumber = null) {
     const item = document.createElement('li');
     item.className = 'track-item';
     item.dataset.index = data.index; 
-
-    const imageSource = data.image_base64 || "https://via.placeholder.com/50/121212/FFFFFF?text=A";
     
-    item.innerHTML = `
-        <img class="track-img" src="${imageSource}" alt="Album Art">
-        <div class="track-info">
-            <h3>${data.title}</h3>
-            <p>Single • ${data.artist || 'Unknown Artist'}</p>
-        </div>
-    `;
+    let artistName = data.artist || 'Unknown Artist';
+    let imageSource = data.image_base64 || "https://via.placeholder.com/50/121212/FFFFFF?text=A";
+    
+    let subtitle = `Single • ${artistName}`;
+
+    if (trackNumber !== null) {
+        // Render for the Popular Tracks list (numbered)
+        const formattedPlays = new Intl.NumberFormat().format(data.play_count);
+        
+        item.innerHTML = `
+            <div class="track-number">${trackNumber}</div>
+            <img class="track-img" src="${imageSource}" alt="Album Art">
+            <div class="track-info">
+                <h3>${data.title}</h3>
+                <p>${formattedPlays} plays</p>
+            </div>
+            <div class="track-controls">
+                 <i class="fas fa-check-circle check-icon"></i>
+                 <i class="fas fa-ellipsis-v"></i>
+            </div>
+        `;
+        item.style.opacity = 1;
+        item.style.transform = 'translateY(0)';
+        
+    } else {
+        // Render for the standard library/search/tracks by artist list
+        if (data.album && data.album !== data.title) {
+             subtitle = data.album;
+        } else {
+             subtitle = `Single • ${artistName}`;
+        }
+        
+        item.innerHTML = `
+            <img class="track-img" src="${imageSource}" alt="Album Art">
+            <div class="track-info">
+                <h3>${data.title}</h3>
+                <p>${subtitle}</p>
+            </div>
+        `;
+    }
     
     item.addEventListener('click', () => {
-        // This is the user explicitly clicking a song, so autoPlay should be true
         loadTrack(data.index, true); 
     });
     
-    // Only apply immediate display for the main library list
-    if (!data.animationIndex) {
+    if (containerType !== 'search') {
         item.style.opacity = 1;
         item.style.transform = 'translateY(0)';
     }
@@ -1135,39 +1396,126 @@ function createTrackListItem(data) {
     return item;
 }
 
-async function loadMusic() {
-    // Only fetch data once
-    if (allTracks.length === 0) {
-        console.log("Loading music data from Firebase...");
-        const querySnapshot = await getDocs(collection(db, "music"));
-        let index = 0;
-        querySnapshot.forEach(doc => {
-            allTracks.push({ 
-                id: doc.id, 
-                index: index++, // Unique, permanent index
-                ...doc.data() 
-            });
-        });
-        console.log(`Loaded ${allTracks.length} tracks.`);
-    }
-
+/**
+ * FIX: This function was previously appending to musicContainer without clearing it first
+ * if it was called multiple times. Now it strictly clears and re-renders.
+ */
+function loadMusic() {
     musicContainer.innerHTML = '';
+    // Use a set to track unique track IDs if you want to eliminate true duplicates
+    // However, keeping allTracks is generally safer if duplicates represent separate playlist items.
+    
     allTracks.forEach((data) => {
-        const item = createTrackListItem(data);
+        const item = createTrackListItem(data, 'music');
         musicContainer.appendChild(item);
         
-        // Fetch duration if missing
         if (!data.duration || data.duration === 0) {
             getTrackDurationFromURL(data.url, item);
         }
     });
+    updatePlaylistView();
+}
 
-    // Determine the starting index
-    if (allTracks.length > 0 && currentTrackIndex === -1) {
-        // Load the first track silently (autoPlay: false)
-        currentTrackIndex = allTracks[0].index; 
-        loadTrack(currentTrackIndex, false); 
+
+// Function to render the list of unique artists
+function createArtistListItem(artistData) {
+    const item = document.createElement('li');
+    item.className = 'artist-item';
+    
+    const artistName = artistData.name;
+    const imageSource = artistData.image_base64 || "https://via.placeholder.com/60/121212/FFFFFF?text=A";
+    
+    item.innerHTML = `
+        <img class="artist-img" src="${imageSource}" alt="${artistName} image">
+        <div class="artist-info">
+            <h3>${artistName}</h3>
+            <p>Artist</p>
+        </div>
+    `;
+    
+    item.addEventListener('click', () => {
+        // When clicked, navigate to the list of all their songs
+        showTracksByArtist(artistName);
+    });
+    
+    return item;
+}
+
+function showArtists() {
+    setActiveLibraryView('artistContainer');
+    artistContainer.innerHTML = '';
+    
+    if(allArtists.size === 0) {
+         artistContainer.innerHTML = `<li style="padding: 16px; color: var(--text-faded);">No artists found. Please add artists via the Admin Panel.</li>`;
+         return;
     }
+
+    // Convert Map values to an array for easy iteration
+    Array.from(allArtists.values()).forEach((data) => {
+        const item = createArtistListItem(data);
+        artistContainer.appendChild(item);
+    });
+}
+
+// Function to render the list of all songs by an artist in the Library view
+function showTracksByArtist(artistName) {
+    tracksByArtistContainer.innerHTML = '';
+    
+    // 1. Add the "Back to Artists" button at the top
+    const backButton = backToArtistsBtn.cloneNode(true);
+    backButton.addEventListener('click', () => {
+        showArtists();
+    });
+    tracksByArtistContainer.appendChild(backButton);
+    
+    // 2. Create the header with Artist's name (standard, non-collapsible header for the list view)
+    const header = document.createElement('li');
+    header.style.padding = '16px';
+    header.style.borderBottom = 'none';
+    header.innerHTML = `
+        <h2 style="margin: 0; font-size: 24px; font-weight: 700;">${artistName}</h2>
+        <p style="margin: 2px 0 0 0; font-size: 14px; color: var(--text-faded);">All Tracks</p>
+    `;
+    tracksByArtistContainer.appendChild(header);
+
+    // 3. Filter and Render all tracks by that artist
+    const tracks = allTracks.filter(track => track.artist.toLowerCase() === artistName.toLowerCase());
+    
+    if (tracks.length === 0) {
+        const noSongs = document.createElement('li');
+        noSongs.style.padding = '16px';
+        noSongs.style.color = 'var(--text-faded)';
+        noSongs.textContent = `No songs found for ${artistName}.`;
+        tracksByArtistContainer.appendChild(noSongs);
+    } else {
+        tracks.forEach((data) => {
+            // Use NULL for trackNumber to ensure it renders the standard album art list item
+            const item = createTrackListItem(data, 'artistTracks', null); 
+            tracksByArtistContainer.appendChild(item);
+        });
+    }
+
+    // 4. Activate the container
+    setActiveLibraryView('tracksByArtistContainer');
+    updatePlaylistView();
+}
+
+
+// NEW: Renders the popular tracks list inside the expanded player
+function renderExpandedPlayerPopularTracks(artistName) {
+    const popularTracksContainer = document.getElementById('artistPopularTracks');
+    popularTracksContainer.innerHTML = '';
+    
+    const tracks = allTracks.filter(track => track.artist.toLowerCase() === artistName.toLowerCase());
+    
+    // Sort by play_count and take the top 6 (mimics the screenshot)
+    const popular = tracks.sort((a, b) => (b.play_count || 0) - (a.play_count || 0)).slice(0, 6);
+    
+    popular.forEach((data, index) => {
+        // Use track number (index + 1) for the Popular list
+        const item = createTrackListItem(data, 'expandedPlayerPopular', index + 1);
+        popularTracksContainer.appendChild(item);
+    });
 }
 
 
@@ -1186,9 +1534,8 @@ function renderSearchResults(results) {
             animationIndex: i 
         }; 
         
-        const item = createTrackListItem(listItemData);
+        const item = createTrackListItem(listItemData, 'search');
         
-        // Manually handle the staggered search animation
         item.style.opacity = 0;
         item.style.transform = 'translateY(10px)';
         setTimeout(() => {
@@ -1205,7 +1552,7 @@ searchInput.addEventListener('input', async (e) => {
     const query = e.target.value.toLowerCase().trim();
     
     if (allTracks.length === 0) {
-        await loadMusic();
+        await loadMusicAndArtists();
     }
     
     if (query.length > 0) {
@@ -1228,7 +1575,7 @@ searchInput.addEventListener('input', async (e) => {
 
 
 // Initialize the application: start on the library page and load data
-loadMusic();
+loadMusicAndArtists();
 navigateToPage('libraryPage');
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -1243,7 +1590,6 @@ if ('serviceWorker' in navigator) {
 // --- START: CORRECTED TOUCH/SWIPE IMPLEMENTATION ---
 // =========================================================================
 
-const playerContentWrapper = document.querySelector('.player-content-wrapper');
 let startX = 0;
 let startY = 0;
 let isDragging = false;
@@ -1281,7 +1627,7 @@ document.addEventListener('touchmove', (e) => {
         
         // 2. Player Swipe-Down/Minimize Logic
         // Check if the player is active AND if the scroll is at the very top (0)
-        if (expandedPlayer.classList.contains('active') && playerContentWrapper.scrollTop === 0) {
+        if (expandedPlayer.classList.contains('active') && scrollContentWrapper.scrollTop === 0) {
              
              // If primary motion is vertical (downwards swipe)
              if (absDeltaY > absDeltaX && deltaY > 0 && absDeltaY > 10) { 
@@ -1323,10 +1669,6 @@ document.addEventListener('touchend', (e) => {
                 expandedPlayer.addEventListener('transitionend', function handler() {
                     expandedPlayer.classList.remove('active');
                     document.body.classList.remove('lock-scroll');
-                    // This line is the key fix: it removes the inline transform style 
-                    // set during the drag and transition, letting the CSS rule 
-                    // (transform: translateY(100%)) apply when inactive, and 
-                    // (transform: translateY(0)) apply when the mini-player re-adds the 'active' class.
                     expandedPlayer.style.transform = ''; 
                     expandedPlayer.removeEventListener('transitionend', handler);
                 }, { once: true });
@@ -1353,6 +1695,42 @@ document.addEventListener('touchend', (e) => {
 
 // =========================================================================
 // --- END: CORRECTED TOUCH/SWIPE IMPLEMENTATION ---
+// =========================================================================
+
+
+// =========================================================================
+// --- START: COLLAPSIBLE HEADER/PARALLAX EFFECT (mimic Spotify scroll) ---
+// =========================================================================
+
+const maxScroll = 250; // The distance over which the header effect takes place (250px)
+
+function updateCollapsibleHeader() {
+    const scrollTop = scrollContentWrapper.scrollTop;
+    
+    // 1. Image Scaling (Shrinks from 1 to 0.7 over maxScroll)
+    const scaleFactor = Math.max(0.7, 1 - (scrollTop / maxScroll) * 0.3); 
+    const opacityFactor = Math.max(0, 1 - (scrollTop / (maxScroll * 0.8))); // Fades slightly faster
+    playerArt.style.transform = `scale(${scaleFactor})`;
+    playerArt.style.opacity = opacityFactor;
+    
+    // 2. Header Background (Fades in black)
+    // Opacity goes from 0 to 1 over the first 150px of scroll
+    const headerOpacity = Math.min(1, scrollTop / 150); 
+    playerHeader.style.backgroundColor = `rgba(18, 18, 18, ${headerOpacity})`;
+
+    // 3. Banner Text Fading (Fades out the big name/follow button)
+    const artistDetailsOverlay = document.querySelector('.artist-details-overlay');
+    if (artistDetailsOverlay) {
+        const bannerOpacity = Math.max(0, 1 - (scrollTop / 100));
+        artistDetailsOverlay.style.opacity = bannerOpacity;
+    }
+}
+
+// Attach the handler to the scrollable content wrapper
+scrollContentWrapper.addEventListener('scroll', updateCollapsibleHeader);
+
+// =========================================================================
+// --- END: COLLAPSIBLE HEADER/PARALLAX EFFECT ---
 // =========================================================================
 </script>
 
