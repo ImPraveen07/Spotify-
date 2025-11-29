@@ -268,7 +268,8 @@ body {
 /* ---------------------------------------------------- */
 .expanded-player {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(to bottom, #004d40 0%, var(--bg-darker) 100%);
+    /* Subtle change to the dynamic background for modern look */
+    background: linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%);
     z-index: 100; 
     display: flex; 
     flex-direction: column; 
@@ -318,7 +319,9 @@ body {
 
 .player-art-container { 
     display: flex; justify-content: center; align-items: center; 
-    padding-top: 20px; padding-bottom: 40px; 
+    /* FIX 1: Set equal padding for visual centering of the image */
+    padding-top: 30px; 
+    padding-bottom: 30px; 
 }
 .player-art { 
     width: 80vw; /* Use viewport width for proportional scaling */
@@ -345,30 +348,33 @@ body {
 input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #535353; outline: none; }
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: white; cursor: pointer; }
 
-/* --- UPDATED ARTIST CARD STYLES --- */
+/* --- UPDATED ARTIST CARD STYLES (ADDED LIQUID GLASS EFFECT) --- */
 .artist-card-expanded {
-    background: var(--spotify-dark-grey); 
+    /* Subtle Liquid Glass Effect */
+    background: rgba(30, 30, 30, 0.7); /* Slightly transparent background */
+    backdrop-filter: blur(10px);        /* Frosted Glass Blur */
+    -webkit-backdrop-filter: blur(10px);/* For Safari */
+    
     border-radius: 12px;
-    padding: 0; /* Important: remove padding here */
-    margin: 20px 16px; /* Apply margin to the whole card */
+    padding: 0; 
+    margin: 20px 16px; 
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle white border */
 }
 
 .artist-banner-area {
-    height: 300px; /* Fixed height for the banner area */
+    height: 300px; 
     position: relative;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    /* Use Flexbox to align content to the bottom */
     display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* Align content to the bottom */
+    justify-content: flex-end; 
     color: white;
     padding-left: 16px;
     padding-right: 16px;
-    padding-bottom: 10px; /* Add padding at the bottom for the text */
-    /* Visual enhancement: subtle gradient overlay for better text contrast */
+    padding-bottom: 10px; 
     box-shadow: inset 0 -100px 50px -50px rgba(0, 0, 0, 0.7);
 }
 
@@ -376,13 +382,11 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     font-size: 14px;
     font-weight: 600;
     color: var(--text-faded);
-    /* Remove top/bottom margins to stick to the bottom flex alignment */
     margin-top: 0; 
-    margin-bottom: 5px; /* Slight margin from the bottom edge */
+    margin-bottom: 5px; 
 }
 
 .artist-details-overlay {
-    /* Section containing the name, listeners, and button */
     padding: 16px;
     padding-top: 10px; 
     display: flex;
@@ -414,6 +418,18 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     text-transform: uppercase;
     font-size: 14px;
     margin-top: 15px;
+}
+
+/* NEW LIQUID GLASS STYLE FOR LYRICS PREVIEW */
+.lyrics-preview {
+    text-align:center; 
+    padding: 15px; 
+    background: rgba(30, 30, 30, 0.7); /* Use the same transparent background */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px; 
+    margin: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1); 
 }
 
 /* Hidden old elements */
@@ -633,7 +649,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
                 </div>
                 
                 </div>
-            <div class="lyrics-preview" style="text-align:center; padding: 15px; background:rgba(255,255,255,0.05); border-radius: 12px; margin: 10px 16px;">
+            <div class="lyrics-preview">
                 <p style="margin: 0; font-size: 14px; color: var(--spotify-light-grey);">Lyrics will appear here</p>
                 <p style="font-size: 18px; font-weight: 700;">Scroll Down to Read!</p>
             </div>
@@ -694,7 +710,8 @@ const db = getFirestore(app);
 
 // --- GLOBAL STATE ---
 let allTracks = [];
-let currentTrackIndex = -1;
+// currentTrackIndex will hold the *unique 'index' property* of the track, not the array index.
+let currentTrackIndex = -1; 
 let currentAudio = new Audio();
 let isPlaying = false;
 
@@ -711,6 +728,11 @@ const librarySearchIcon = document.getElementById('librarySearchIcon');
 const searchInput = document.getElementById('searchInput');
 const searchResultsContainer = document.getElementById('searchResultsContainer');
 const browsingSection = document.getElementById('browsingSection');
+
+// NEW HELPER: Get the array index from the unique track index
+function getArrayIndexOfTrack(trackIndex) {
+    return allTracks.findIndex(t => t.index === trackIndex);
+}
 
 // --- HELPER FUNCTIONS ---
 function formatTime(seconds) {
@@ -752,6 +774,7 @@ function navigateToPage(pageId) {
     });
 
     if (pageId === 'libraryPage' || pageId === 'searchPage') {
+        // Load music only if the array is empty
         if (allTracks.length === 0) {
             loadMusic();
         }
@@ -791,10 +814,15 @@ function togglePlayPause() {
         mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
         miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
     } else {
-        currentAudio.play().catch(e => console.error("Play failed:", e));
-        isPlaying = true;
-        mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        miniPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        // FIX: Only attempt to play if audio source is ready
+        if (currentAudio.src) {
+            currentAudio.play().catch(e => console.error("Play failed:", e));
+            isPlaying = true;
+            mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            miniPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+            console.warn("Audio source not set, cannot play.");
+        }
     }
     updatePlaylistView();
 }
@@ -803,6 +831,7 @@ function loadTrack(index, autoPlay = true) {
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
 
+    // Pause old track if playing
     if(currentAudio && isPlaying) {
         currentAudio.pause();
         isPlaying = false;
@@ -810,11 +839,15 @@ function loadTrack(index, autoPlay = true) {
 
     currentTrackIndex = index;
     const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Art";
-    const artistImageSource = track.artist_image_base64 || ''; // <--- NEW: Retrieve artist image
+    const artistImageSource = track.artist_image_base64 || ''; 
 
     currentAudio.src = track.url;
-    currentAudio.load();
+    // We MUST set the metadata for the range/time to display correctly, 
+    // but the `load` call is asynchronous, so we trust the `timeupdate` handler 
+    // to update the duration once metadata is ready.
+    currentAudio.load(); 
 
+    // Update Player UI elements
     document.getElementById('playerArt').src = imageSource;
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = track.artist;
@@ -823,36 +856,42 @@ function loadTrack(index, autoPlay = true) {
     document.getElementById('miniArt').src = imageSource;
     document.getElementById('miniTitle').textContent = track.title;
     document.getElementById('miniArtist').textContent = track.artist;
-    miniPlayer.classList.add('active');
+    miniPlayer.classList.add('active'); // Ensure miniPlayer is visible
     
-    // --- START: UPDATED ARTIST CARD DISPLAY LOGIC ---
+    // Update Artist Card UI elements
     document.getElementById('expandedArtistName').innerHTML = `${track.artist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
-    // Static listener count as a placeholder
     document.getElementById('expandedMonthlyListeners').textContent = '32.5L monthly listeners'; 
-
     const artistBannerArea = document.getElementById('artistBannerArea');
     if (artistImageSource) {
-         // Set the uploaded image as the background
          artistBannerArea.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url('${artistImageSource}')`;
          artistBannerArea.style.backgroundColor = 'transparent';
     } else {
-         // Fallback color if no artist image is provided
          artistBannerArea.style.backgroundImage = 'none';
          artistBannerArea.style.backgroundColor = '#303030';
     }
-    // --- END: UPDATED ARTIST CARD DISPLAY LOGIC ---
+    
+    // Update the Expanded Player's main background gradient color based on the album art (simplified for example)
+    // In a real app, you'd calculate the dominant color of the imageSource here.
+    const primaryColor = '#004d40'; 
+    expandedPlayer.style.background = `linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%)`;
 
+
+    // Reset progress UI
     document.getElementById('playerProgress').value = 0;
     document.getElementById('currentTime').textContent = '0:00';
     document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
     
     if (autoPlay) {
-        isPlaying = false; 
+        // Force state to play if autoPlay is true (i.e., user clicked a track)
+        isPlaying = false; // Set to false so togglePlayPause starts it
         togglePlayPause();
+        // Ensure expanded player opens on a track click
         document.getElementById('expandedPlayer').classList.add('active'); 
-        // FIX 1: Lock body scroll when player is opened
         document.body.classList.add('lock-scroll'); 
+        // CRITICAL FIX: Ensure the inline transform is reset so the CSS animation starts correctly
+        expandedPlayer.style.transform = ''; 
     } else {
+        // If not auto-playing (like initial load), ensure play buttons show 'Play'
         mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
         miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
     }
@@ -861,20 +900,26 @@ function loadTrack(index, autoPlay = true) {
 }
 
 function nextTrack() {
-    let nextIndex = (currentTrackIndex + 1) % allTracks.length;
-    // Find the next index's true global index
-    const nextTrackData = allTracks[nextIndex % allTracks.length];
+    const currentArrayIndex = getArrayIndexOfTrack(currentTrackIndex);
+    if (currentArrayIndex === -1) return;
+
+    let nextArrayIndex = (currentArrayIndex + 1) % allTracks.length;
+    const nextTrackData = allTracks[nextArrayIndex];
     if (nextTrackData) {
-        loadTrack(nextTrackData.index);
+        // Use autoPlay: true when skipping tracks
+        loadTrack(nextTrackData.index, true); 
     }
 }
 
 function prevTrack() {
-    let prevIndex = (currentTrackIndex - 1 + allTracks.length) % allTracks.length;
-    // Find the previous index's true global index
-    const prevTrackData = allTracks[prevIndex % allTracks.length];
+    const currentArrayIndex = getArrayIndexOfTrack(currentTrackIndex);
+    if (currentArrayIndex === -1) return;
+    
+    let prevArrayIndex = (currentArrayIndex - 1 + allTracks.length) % allTracks.length;
+    const prevTrackData = allTracks[prevArrayIndex];
     if (prevTrackData) {
-        loadTrack(prevTrackData.index);
+        // Use autoPlay: true when skipping tracks
+        loadTrack(prevTrackData.index, true);
     }
 }
 
@@ -882,6 +927,7 @@ function updatePlaylistView() {
     const updateItems = (container) => {
         container.querySelectorAll('.track-item').forEach(item => {
             item.classList.remove('playing');
+            // Check if it's the current track, and if the song is currently playing
             if (parseInt(item.dataset.index) === currentTrackIndex && isPlaying) {
                 item.classList.add('playing');
             }
@@ -912,26 +958,33 @@ function downloadCurrentTrack() {
     alert(`Downloading "${track.title}"... (Check your browser downloads)`);
 }
 
-// Attach player listeners once
+// --- Event Listeners ---
 mainPlayBtn.addEventListener('click', togglePlayPause);
 miniPlayBtn.addEventListener('click', togglePlayPause);
 document.getElementById('nextBtn').addEventListener('click', nextTrack);
 document.getElementById('prevBtn').addEventListener('click', prevTrack);
 
 document.getElementById('minimizeBtn').addEventListener('click', () => {
+    // Minimize (Back) button functionality
     document.getElementById('expandedPlayer').classList.remove('active');
-    // FIX 2: Unlock body scroll when player is minimized
     document.body.classList.remove('lock-scroll');
+    // Ensure inline transform is removed when minimizing via button as well
+    expandedPlayer.style.transform = ''; 
 });
 
 miniPlayer.addEventListener('click', (e) => {
-    if(e.target.closest('#miniPlayBtn')) return; 
+    // Prevent the mini-player click from overriding the mini-play button click
+    if(e.target.closest('#miniPlayBtn') || e.target.closest('.mini-check')) return; 
+    
+    // FIX: Open the expanded player when the mini-player area is tapped
     if (currentTrackIndex !== -1) {
-        document.getElementById('expandedPlayer').classList.add('active');
-        // FIX 3: Lock body scroll when mini-player is clicked
+        expandedPlayer.classList.add('active');
         document.body.classList.add('lock-scroll');
+        // CRITICAL FIX: Ensure the inline transform is reset so the CSS animation starts correctly
+        expandedPlayer.style.transform = ''; 
     }
 });
+
 document.getElementById('playerProgress').addEventListener('input', () => {
     const progress = document.getElementById('playerProgress');
     if(isNaN(currentAudio.duration)) return;
@@ -953,7 +1006,6 @@ downloadBtn.addEventListener('click', downloadCurrentTrack);
 function createTrackListItem(data) {
     const item = document.createElement('li');
     item.className = 'track-item';
-    // Use the actual track index for the loadTrack function
     item.dataset.index = data.index; 
 
     const imageSource = data.image_base64 || "https://via.placeholder.com/50/121212/FFFFFF?text=A";
@@ -967,7 +1019,7 @@ function createTrackListItem(data) {
     `;
     
     item.addEventListener('click', () => {
-        // Pass the correct unique index to load the song
+        // This is the user explicitly clicking a song, so autoPlay should be true
         loadTrack(data.index, true); 
     });
     
@@ -981,6 +1033,7 @@ function createTrackListItem(data) {
 }
 
 async function loadMusic() {
+    // Only fetch data once
     if (allTracks.length === 0) {
         console.log("Loading music data from Firebase...");
         const querySnapshot = await getDocs(collection(db, "music"));
@@ -988,7 +1041,7 @@ async function loadMusic() {
         querySnapshot.forEach(doc => {
             allTracks.push({ 
                 id: doc.id, 
-                index: index++, // This is the unique, permanent index
+                index: index++, // Unique, permanent index
                 ...doc.data() 
             });
         });
@@ -1000,6 +1053,7 @@ async function loadMusic() {
         const item = createTrackListItem(data);
         musicContainer.appendChild(item);
         
+        // Fetch duration if missing
         if (!data.duration || data.duration === 0) {
             getTrackDurationFromURL(data.url, item);
         }
@@ -1007,7 +1061,7 @@ async function loadMusic() {
 
     // Determine the starting index
     if (allTracks.length > 0 && currentTrackIndex === -1) {
-        // Use the index property from the first track object
+        // Load the first track silently (autoPlay: false)
         currentTrackIndex = allTracks[0].index; 
         loadTrack(currentTrackIndex, false); 
     }
@@ -1024,9 +1078,6 @@ function renderSearchResults(results) {
     }
     
     results.forEach((data, i) => {
-        // Create an object for the list item. We only add a temporary index (i) 
-        // for the visual staggered animation, but the track's real index (data.index)
-        // is preserved for playing.
         const listItemData = { 
             ...data, 
             animationIndex: i 
@@ -1126,6 +1177,7 @@ document.addEventListener('touchmove', (e) => {
         }
         
         // 2. Player Swipe-Down/Minimize Logic
+        // Check if the player is active AND if the scroll is at the very top (0)
         if (expandedPlayer.classList.contains('active') && playerContentWrapper.scrollTop === 0) {
              
              // If primary motion is vertical (downwards swipe)
@@ -1135,13 +1187,13 @@ document.addEventListener('touchmove', (e) => {
                  
                  expandedPlayer.classList.add('is-dragging');
                  // Only allow translation downwards (Math.max(0, deltaY))
-                 expandedPlayer.style.transform = `translateY(${deltaY}px)`;
+                 expandedPlayer.style.transform = `translateY(${Math.max(0, deltaY)}px)`;
                  
                  e.preventDefault(); // Prevent page scroll
              } 
              // If primary motion is horizontal (left/right swipe)
              else if (absDeltaX > absDeltaY && absDeltaX > 10) {
-                // Allows horizontal movement inside the player, but prevents browser overscroll
+                // Allows horizontal movement inside the player
                 isDragging = true; // Mark as dragging for touchend logic
                 e.preventDefault();
              }
@@ -1152,10 +1204,11 @@ document.addEventListener('touchmove', (e) => {
 document.addEventListener('touchend', (e) => {
     if (expandedPlayer.classList.contains('active')) {
         expandedPlayer.classList.remove('is-dragging');
+        // Get final coordinates to calculate swipe distance
         const endX = e.changedTouches[0].clientX;
         const endY = e.changedTouches[0].clientY;
-        const deltaX = startX - endX; // Right-to-Left is positive
-        const deltaY = endY - startY; // Downwards is positive
+        const deltaX = startX - endX; // Right-to-Left is positive (for next track)
+        const deltaY = endY - startY; // Downwards is positive (for minimize)
 
         if (isSwipingVertically) {
             // Player Minimize Swipe Logic
@@ -1163,12 +1216,17 @@ document.addEventListener('touchend', (e) => {
                 // Swipe down threshold met: minimize player
                 expandedPlayer.style.transform = 'translateY(100%)';
                 
-                // IMPORTANT FIX: Ensure the state is reset AFTER the transition
+                // CRITICAL FIX: Reset state after transition completes
                 expandedPlayer.addEventListener('transitionend', function handler() {
                     expandedPlayer.classList.remove('active');
                     document.body.classList.remove('lock-scroll');
+                    // This line is the key fix: it removes the inline transform style 
+                    // set during the drag and transition, letting the CSS rule 
+                    // (transform: translateY(100%)) apply when inactive, and 
+                    // (transform: translateY(0)) apply when the mini-player re-adds the 'active' class.
+                    expandedPlayer.style.transform = ''; 
                     expandedPlayer.removeEventListener('transitionend', handler);
-                });
+                }, { once: true });
             } else {
                 // Not enough drag: snap back to full screen
                 expandedPlayer.style.transform = 'translateY(0)';
@@ -1185,6 +1243,7 @@ document.addEventListener('touchend', (e) => {
         }
     }
 
+    // Reset state variables
     isDragging = false;
     isSwipingVertically = false;
 }, { passive: true }); 
