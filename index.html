@@ -337,12 +337,14 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    /* CHANGE 1: Use Flexbox to align content to the bottom */
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: flex-end; /* Align content to the bottom */
     color: white;
     padding-left: 16px;
     padding-right: 16px;
+    padding-bottom: 10px; /* Add padding at the bottom for the text */
     /* Visual enhancement: subtle gradient overlay for better text contrast */
     box-shadow: inset 0 -100px 50px -50px rgba(0, 0, 0, 0.7);
 }
@@ -351,8 +353,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     font-size: 14px;
     font-weight: 600;
     color: var(--text-faded);
-    margin-top: 20px;
-    margin-bottom: 10px;
+    /* CHANGE 2: Remove top/bottom margins to stick to the bottom flex alignment */
+    margin-top: 0; 
+    margin-bottom: 5px; /* Slight margin from the bottom edge */
 }
 
 .artist-details-overlay {
