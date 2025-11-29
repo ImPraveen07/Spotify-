@@ -826,7 +826,67 @@ function togglePlayPause() {
     }
     updatePlaylistView();
 }
+// =======================
+// MEDIA SESSION + NOTIFICATION
+// =======================
 
+// Ask notification permission
+if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission();
+}
+
+function updateMediaSession(track, imageSource) {
+    if (!("mediaSession" in navigator)) return;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist,
+        artwork: [
+            { src: imageSource, sizes: "512x512", type: "image/png" }
+        ]
+    });
+
+    navigator.mediaSession.setActionHandler("play", () => {
+        currentAudio.play();
+        isPlaying = true;
+        mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        miniPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    });
+
+    navigator.mediaSession.setActionHandler("pause", () => {
+        currentAudio.pause();
+        isPlaying = false;
+        mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+        miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+    });
+
+    navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
+    navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
+
+    // Show system notification
+    showSongNotification(track, imageSource);
+}
+
+function showSongNotification(track, imageSrc) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const options = {
+        body: track.artist,
+        icon: imageSrc,
+        badge: imageSrc,
+        tag: "now-playing",
+        renotify: true
+    };
+
+    navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg) {
+            reg.showNotification(track.title, options);
+        } else {
+            new Notification(track.title, options);
+        }
+    });
+}
 function loadTrack(index, autoPlay = true) {
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
@@ -875,16 +935,18 @@ function loadTrack(index, autoPlay = true) {
     const primaryColor = '#004d40'; 
     expandedPlayer.style.background = `linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%)`;
 
+// Reset progress UI
+document.getElementById('playerProgress').value = 0;
+document.getElementById('currentTime').textContent = '0:00';
+document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
 
-    // Reset progress UI
-    document.getElementById('playerProgress').value = 0;
-    document.getElementById('currentTime').textContent = '0:00';
-    document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
-    
-    if (autoPlay) {
-        // Force state to play if autoPlay is true (i.e., user clicked a track)
-        isPlaying = false; // Set to false so togglePlayPause starts it
-        togglePlayPause();
+// >>> ADD THIS LINE <<<
+updateMediaSession(track, imageSource);
+
+if (autoPlay) {
+    isPlaying = false;
+    togglePlayPause();
+
         // Ensure expanded player opens on a track click
         document.getElementById('expandedPlayer').classList.add('active'); 
         document.body.classList.add('lock-scroll'); 
