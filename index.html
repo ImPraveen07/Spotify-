@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,6 +42,15 @@ body {
     color: white;
     min-height: 100vh;
 }
+
+/* NEW: Style to lock the background scroll when the player is active */
+.lock-scroll {
+    overflow: hidden; 
+    position: fixed; 
+    width: 100%;
+    height: 100%;
+}
+
 
 /* --- Main View Container & Pages --- */
 .main-content {
@@ -255,7 +265,7 @@ body {
 
 
 /* ---------------------------------------------------- */
-/* --- EXPANDED PLAYER STYLES (UPDATED FOR SCROLL) --- */
+/* --- EXPANDED PLAYER STYLES (UPDATED FOR SCROLL & RESPONSIVENESS) --- */
 /* ---------------------------------------------------- */
 .expanded-player {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -265,8 +275,14 @@ body {
     flex-direction: column; 
     padding: 0; 
     box-sizing: border-box;
-    transition: transform 0.3s ease-in-out; 
+    /* CHANGE 1: Smooth transition for responsive resizing */
+    transition: transform 0.3s ease-in-out, background 0.5s ease; 
     transform: translateY(100%); 
+}
+
+/* NEW: Added translation for swiping down/away */
+.expanded-player.is-dragging {
+    transition: none; /* Disable transition while dragging */
 }
 
 .expanded-player.active { 
@@ -305,7 +321,15 @@ body {
     display: flex; justify-content: center; align-items: center; 
     padding-top: 20px; padding-bottom: 40px; 
 }
-.player-art { width: 80vw; max-width: 350px; aspect-ratio: 1 / 1; border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); }
+.player-art { 
+    width: 80vw; /* Use viewport width for proportional scaling */
+    max-width: 350px; 
+    aspect-ratio: 1 / 1; 
+    border-radius: 8px; 
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); 
+    /* NEW: Add transition for smooth resizing */
+    transition: width 0.3s ease-out; 
+}
 
 .player-details { margin: 0 0 20px 0; display: flex; justify-content: space-between; align-items: flex-end; }
 .player-details h2 { margin: 0; font-size: 24px; font-weight: 700; }
@@ -337,7 +361,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    /* CHANGE 1: Use Flexbox to align content to the bottom */
+    /* Use Flexbox to align content to the bottom */
     display: flex;
     flex-direction: column;
     justify-content: flex-end; /* Align content to the bottom */
@@ -353,7 +377,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     font-size: 14px;
     font-weight: 600;
     color: var(--text-faded);
-    /* CHANGE 2: Remove top/bottom margins to stick to the bottom flex alignment */
+    /* Remove top/bottom margins to stick to the bottom flex alignment */
     margin-top: 0; 
     margin-bottom: 5px; /* Slight margin from the bottom edge */
 }
@@ -418,11 +442,18 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
 .mini-controls .mini-check { color: var(--spotify-green); font-size: 22px; padding: 0 8px; }
 
 
-/* --- FOOTER NAVIGATION --- */
+/* --- FOOTER NAVIGATION (LIQUID GLASS EFFECT APPLIED) --- */
 .footer-nav {
     position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-    background: var(--spotify-dark-grey); display: flex;
-    justify-content: space-around; align-items: center; z-index: 55;
+    /* CHANGE: Liquid Glass Effect */
+    background: rgba(18, 18, 18, 0.85); /* Slightly transparent dark background */
+    backdrop-filter: blur(10px);        /* Frosted Glass Effect */
+    -webkit-backdrop-filter: blur(10px);/* For Safari support */
+    /* Original display properties */
+    display: flex;
+    justify-content: space-around; 
+    align-items: center; 
+    z-index: 55;
     padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -439,6 +470,32 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
     color: white;
 }
 
+/* NEW: Media Query for larger screens to keep player proportional but not massive */
+@media (min-width: 768px) {
+    .expanded-player {
+        /* On larger screens, center the player content */
+        align-items: center; 
+    }
+    .player-content-wrapper {
+        /* Constraint max width for readability */
+        max-width: 500px; 
+        width: 100%;
+    }
+    .player-header,
+    .player-art-container, 
+    .player-details,
+    .progress-container,
+    .controls-row,
+    .scrollable-content > div {
+        /* Remove padding on wrappers, rely on max-width */
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .player-art { 
+        width: 60vw; /* Slightly smaller on very wide screens */
+        max-width: 300px; /* Cap size */
+    }
+}
 </style>
 </head>
 <body>
@@ -561,6 +618,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: 
         </div>
 
         <div class="scrollable-content">
+            
+            <div style="height: 10vh;"></div> 
             
             <div class="artist-card-expanded">
                 
@@ -792,6 +851,8 @@ function loadTrack(index, autoPlay = true) {
         isPlaying = false; 
         togglePlayPause();
         document.getElementById('expandedPlayer').classList.add('active'); 
+        // FIX 1: Lock body scroll when player is opened
+        document.body.classList.add('lock-scroll'); 
     } else {
         mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
         miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
@@ -802,12 +863,20 @@ function loadTrack(index, autoPlay = true) {
 
 function nextTrack() {
     let nextIndex = (currentTrackIndex + 1) % allTracks.length;
-    loadTrack(nextIndex);
+    // Find the next index's true global index
+    const nextTrackData = allTracks[nextIndex % allTracks.length];
+    if (nextTrackData) {
+        loadTrack(nextTrackData.index);
+    }
 }
 
 function prevTrack() {
     let prevIndex = (currentTrackIndex - 1 + allTracks.length) % allTracks.length;
-    loadTrack(prevIndex);
+    // Find the previous index's true global index
+    const prevTrackData = allTracks[prevIndex % allTracks.length];
+    if (prevTrackData) {
+        loadTrack(prevTrackData.index);
+    }
 }
 
 function updatePlaylistView() {
@@ -849,13 +918,19 @@ mainPlayBtn.addEventListener('click', togglePlayPause);
 miniPlayBtn.addEventListener('click', togglePlayPause);
 document.getElementById('nextBtn').addEventListener('click', nextTrack);
 document.getElementById('prevBtn').addEventListener('click', prevTrack);
+
 document.getElementById('minimizeBtn').addEventListener('click', () => {
     document.getElementById('expandedPlayer').classList.remove('active');
+    // FIX 2: Unlock body scroll when player is minimized
+    document.body.classList.remove('lock-scroll');
 });
+
 miniPlayer.addEventListener('click', (e) => {
     if(e.target.closest('#miniPlayBtn')) return; 
     if (currentTrackIndex !== -1) {
         document.getElementById('expandedPlayer').classList.add('active');
+        // FIX 3: Lock body scroll when mini-player is clicked
+        document.body.classList.add('lock-scroll');
     }
 });
 document.getElementById('playerProgress').addEventListener('input', () => {
@@ -931,7 +1006,9 @@ async function loadMusic() {
         }
     });
 
+    // Determine the starting index
     if (allTracks.length > 0 && currentTrackIndex === -1) {
+        // Use the index property from the first track object
         currentTrackIndex = allTracks[0].index; 
         loadTrack(currentTrackIndex, false); 
     }
@@ -1007,6 +1084,115 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('SW registration failed:', err));
   });
 }
+
+
+// =========================================================================
+// --- START: CORRECTED TOUCH/SWIPE IMPLEMENTATION ---
+// =========================================================================
+
+const playerContentWrapper = document.querySelector('.player-content-wrapper');
+let startX = 0;
+let startY = 0;
+let isDragging = false;
+let isSwipingVertically = false;
+const SWIPE_THRESHOLD_X = 50; 
+const SWIPE_THRESHOLD_Y = 50; 
+const EDGE_THRESHOLD = 30; 
+
+/**
+ * Global touch handler to prevent browser/PWA back navigation (from the left edge).
+ */
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isDragging = false;
+        isSwipingVertically = false;
+    }
+}, { passive: true }); 
+
+document.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1) {
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+        const deltaX = currentX - startX;
+        const deltaY = currentY - startY;
+        const absDeltaX = Math.abs(deltaX);
+        const absDeltaY = Math.abs(deltaY);
+
+        // 1. Prevent unwanted browser back navigation (Left-to-Right swipe from edge)
+        if (startX < EDGE_THRESHOLD && deltaX > 0 && absDeltaX > absDeltaY) {
+            e.preventDefault(); 
+            return;
+        }
+        
+        // 2. Player Swipe-Down/Minimize Logic
+        if (expandedPlayer.classList.contains('active') && playerContentWrapper.scrollTop === 0) {
+             
+             // If primary motion is vertical (downwards swipe)
+             if (absDeltaY > absDeltaX && deltaY > 0 && absDeltaY > 10) { 
+                 isSwipingVertically = true;
+                 isDragging = true;
+                 
+                 expandedPlayer.classList.add('is-dragging');
+                 // Only allow translation downwards (Math.max(0, deltaY))
+                 expandedPlayer.style.transform = `translateY(${deltaY}px)`;
+                 
+                 e.preventDefault(); // Prevent page scroll
+             } 
+             // If primary motion is horizontal (left/right swipe)
+             else if (absDeltaX > absDeltaY && absDeltaX > 10) {
+                // Allows horizontal movement inside the player, but prevents browser overscroll
+                isDragging = true; // Mark as dragging for touchend logic
+                e.preventDefault();
+             }
+        }
+    }
+}, { passive: false }); 
+
+document.addEventListener('touchend', (e) => {
+    if (expandedPlayer.classList.contains('active')) {
+        expandedPlayer.classList.remove('is-dragging');
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const deltaX = startX - endX; // Right-to-Left is positive
+        const deltaY = endY - startY; // Downwards is positive
+
+        if (isSwipingVertically) {
+            // Player Minimize Swipe Logic
+            if (deltaY > SWIPE_THRESHOLD_Y) {
+                // Swipe down threshold met: minimize player
+                expandedPlayer.style.transform = 'translateY(100%)';
+                
+                // IMPORTANT FIX: Ensure the state is reset AFTER the transition
+                expandedPlayer.addEventListener('transitionend', function handler() {
+                    expandedPlayer.classList.remove('active');
+                    document.body.classList.remove('lock-scroll');
+                    expandedPlayer.removeEventListener('transitionend', handler);
+                });
+            } else {
+                // Not enough drag: snap back to full screen
+                expandedPlayer.style.transform = 'translateY(0)';
+            }
+        } else if (isDragging && Math.abs(deltaX) > SWIPE_THRESHOLD_X) {
+            // Horizontal Swipe Logic (Next/Prev Track)
+            if (deltaX > 0) {
+                // Swipe Left (Right-to-Left) -> Next Track
+                nextTrack();
+            } else {
+                // Swipe Right (Left-to-Right) -> Previous Track
+                prevTrack();
+            }
+        }
+    }
+
+    isDragging = false;
+    isSwipingVertically = false;
+}, { passive: true }); 
+
+// =========================================================================
+// --- END: CORRECTED TOUCH/SWIPE IMPLEMENTATION ---
+// =========================================================================
 </script>
 
 </body>
