@@ -713,9 +713,32 @@ let allTracks = [];
 // currentTrackIndex will hold the *unique 'index' property* of the track, not the array index.
 let currentTrackIndex = -1; 
 let currentAudio = new Audio();
+    currentAudio.addEventListener('timeupdate', () => {
+    currentPosition = currentAudio.currentTime; // keep current time updated
+    if (isPlaying) updateMediaNotification();
+});
 let isPlaying = false;
+let currentPosition = 0; // to track current playback time
+let isPlaying = false;   // your existing playback state
+function updateMediaNotification() {
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentTrack.name,       // your song name
+            artist: currentTrack.artist,    // artist name
+            album: currentTrack.album || '', 
+            artwork: [
+                { src: currentTrack.cover, sizes: '512x512', type: 'image/jpeg' }
+            ]
+        });
 
-// --- DOM ELEMENTS ---
+        navigator.mediaSession.setPositionState({
+            duration: currentAudio.duration || 0,
+            playbackRate: currentAudio.playbackRate || 1,
+            position: currentPosition
+        });
+    }
+}
+    // --- DOM ELEMENTS ---
 const musicContainer = document.getElementById('musicContainer');
 const expandedPlayer = document.getElementById('expandedPlayer');
 const miniPlayer = document.getElementById('miniPlayer');
@@ -806,26 +829,73 @@ if (librarySearchIcon) {
 // --- PLAYER CONTROLS ---
 
 function togglePlayPause() {
-    if (currentTrackIndex === -1) return;
+    if (currentTrackIndex === -1) return; // No track selected
 
     if (isPlaying) {
         currentAudio.pause();
         isPlaying = false;
+
+        // Update UI
         mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
         miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+
+        // Update notification to show paused state
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = "paused";
+            updateMediaNotification(); // custom function to refresh notification
+        }
+
     } else {
-        // FIX: Only attempt to play if audio source is ready
         if (currentAudio.src) {
             currentAudio.play().catch(e => console.error("Play failed:", e));
             isPlaying = true;
+
+            // Update UI
             mainPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
             miniPlayBtn.innerHTML = '<i class="fas fa-pause"></i>';
+
+            // Update notification to show playing state
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = "playing";
+                updateMediaNotification(); // refresh with current time
+            }
         } else {
             console.warn("Audio source not set, cannot play.");
         }
     }
-    updatePlaylistView();
+
+    updatePlaylistView(); // refresh playlist highlight
 }
+
+// Helper function to update Media Session notification
+function updateMediaNotification() {
+    if (currentTrackIndex === -1 || !allTracks[currentTrackIndex]) return;
+
+    const track = allTracks[currentTrackIndex];
+
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.title || "Unknown",
+            artist: track.artist || "Unknown",
+            album: track.album || "",
+            artwork: track.artwork || [] // array of {src, sizes, type}
+        });
+
+        // Update position in notification
+        if ('setPositionState' in navigator.mediaSession) {
+            navigator.mediaSession.setPositionState({
+                duration: currentAudio.duration || 0,
+                position: currentAudio.currentTime || 0,
+                playbackRate: currentAudio.playbackRate || 1
+            });
+        }
+    }
+}
+
+// Optional: keep the notification updated every second while playing
+currentAudio.addEventListener('timeupdate', () => {
+    if (isPlaying) updateMediaNotification();
+});
 // =======================
 // MEDIA SESSION + NOTIFICATION
 // =======================
