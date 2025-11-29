@@ -713,32 +713,11 @@ let allTracks = [];
 // currentTrackIndex will hold the *unique 'index' property* of the track, not the array index.
 let currentTrackIndex = -1; 
 let currentAudio = new Audio();
-    currentAudio.addEventListener('timeupdate', () => {
-    currentPosition = currentAudio.currentTime; // keep current time updated
-    if (isPlaying) updateMediaNotification();
-});
-
-let currentPosition = 0; // to track current playback time
+    
+let currentPosition = 0; // to track current playback time (currently redundant, using currentAudio.currentTime)
 let isPlaying = false;   // your existing playback state
-function updateMediaNotification() {
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: currentTrack.name,       // your song name
-            artist: currentTrack.artist,    // artist name
-            album: currentTrack.album || '', 
-            artwork: [
-                { src: currentTrack.cover, sizes: '512x512', type: 'image/jpeg' }
-            ]
-        });
 
-        navigator.mediaSession.setPositionState({
-            duration: currentAudio.duration || 0,
-            playbackRate: currentAudio.playbackRate || 1,
-            position: currentPosition
-        });
-    }
-}
-    // --- DOM ELEMENTS ---
+// --- DOM ELEMENTS ---
 const musicContainer = document.getElementById('musicContainer');
 const expandedPlayer = document.getElementById('expandedPlayer');
 const miniPlayer = document.getElementById('miniPlayer');
@@ -862,34 +841,37 @@ function updatePlayButtonUI(state) {
 }
 
 // =======================
-// MEDIA SESSION & NOTIFICATION
+// MEDIA SESSION & NOTIFICATION (CRITICAL FIXES HERE)
 // =======================
 
 function updateMediaNotification() {
-    if (currentTrackIndex === -1 || !allTracks[currentTrackIndex]) return;
-
-    const track = allTracks[currentTrackIndex];
-
-    if ("mediaSession" in navigator) {
+    const currentTrack = allTracks.find(t => t.index === currentTrackIndex);
+    if (!currentTrack) return;
+    
+    if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: track.title || "Unknown",
-            artist: track.artist || "Unknown",
-            album: track.album || "",
-            artwork: track.artwork || [] // array of {src, sizes, type}
+            title: currentTrack.title,       // <-- Correct property
+            artist: currentTrack.artist,    // <-- Correct property
+            album: currentTrack.album || '', 
+            artwork: [
+                { src: currentTrack.image_base64 || "s512.png", sizes: '512x512', type: 'image/jpeg' }
+            ]
         });
 
+        // Set Position State for notification time updates
         if ("setPositionState" in navigator.mediaSession) {
-            navigator.mediaSession.setPositionState({
-                duration: currentAudio.duration || 0,
-                position: currentAudio.currentTime || 0,
-                playbackRate: currentAudio.playbackRate || 1
-            });
+             navigator.mediaSession.setPositionState({
+                 duration: currentAudio.duration || 0,
+                 playbackRate: currentAudio.playbackRate || 1,
+                 position: currentAudio.currentTime
+             });
         }
     }
 }
 
 // Keep MediaSession position updated while playing
 currentAudio.addEventListener('timeupdate', () => {
+    // This is the core time update loop. The global variable currentPosition is not needed.
     if (isPlaying) updateMediaNotification();
 });
 
@@ -901,27 +883,27 @@ if ("Notification" in window && Notification.permission !== "granted") {
 function updateMediaSession(track, imageSrc) {
     if (!("mediaSession" in navigator)) return;
 
-    navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.title || "Unknown",
-        artist: track.artist || "Unknown",
-        artwork: [{ src: imageSrc, sizes: "512x512", type: "image/png" }]
-    });
-
+    // Setting metadata is now handled by updateMediaNotification, but we set handlers here
+    
     navigator.mediaSession.setActionHandler("play", () => {
         currentAudio.play();
         isPlaying = true;
         updatePlayButtonUI("pause");
+        updateMediaNotification(); // Update notification on action
     });
 
     navigator.mediaSession.setActionHandler("pause", () => {
         currentAudio.pause();
         isPlaying = false;
         updatePlayButtonUI("play");
+        updateMediaNotification(); // Update notification on action
     });
 
     navigator.mediaSession.setActionHandler("nexttrack", nextTrack);
     navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
 
+    // Call updateMediaNotification once here to initialize the notification/session state
+    updateMediaNotification();
     showSongNotification(track, imageSrc);
 }
 
@@ -929,7 +911,7 @@ function showSongNotification(track, imageSrc) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
 
     const options = {
-        body: track.artist || "",
+        body: track.artist || "Playback in progress",
         icon: imageSrc,
         badge: imageSrc,
         tag: "now-playing",
@@ -938,49 +920,38 @@ function showSongNotification(track, imageSrc) {
 
     navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) {
-            reg.showNotification(track.title || "Unknown", options);
+            // Service worker notifications can be richer, but basic notification is used here.
+            reg.showNotification(track.title || "Unknown Track", options);
         } else {
-            new Notification(track.title || "Unknown", options);
+            new Notification(track.title || "Unknown Track", options);
         }
     });
 }
 
 // =======================
-// LOAD TRACK
+// LOAD TRACK (CRITICALLY CORRECTED & CONSOLIDATED)
 // =======================
 
 function loadTrack(index, autoPlay = true) {
+    // 1. Find the track data using the unique index
     const track = allTracks.find(t => t.index === index);
     if (!track) return;
 
+    // 2. State & Audio Prep
     currentTrackIndex = index;
-    currentAudio.src = track.src || "";
-    updateMediaSession(track, track.artwork?.[0]?.src || "");
-
-    if (autoPlay) togglePlayPause();
-    else updatePlayButtonUI("play");
-
-    updatePlaylistView();
-}
-
+    currentAudio.src = track.url;
+    currentAudio.load(); // Load metadata for duration
 
     // Pause old track if playing
-    if(currentAudio && isPlaying) {
+    if (isPlaying) {
         currentAudio.pause();
         isPlaying = false;
     }
 
-    currentTrackIndex = index;
     const imageSource = track.image_base64 || "https://via.placeholder.com/200/181818/1db954?text=No+Art";
     const artistImageSource = track.artist_image_base64 || ''; 
 
-    currentAudio.src = track.url;
-    // We MUST set the metadata for the range/time to display correctly, 
-    // but the `load` call is asynchronous, so we trust the `timeupdate` handler 
-    // to update the duration once metadata is ready.
-    currentAudio.load(); 
-
-    // Update Player UI elements
+    // 3. Update Player UI elements
     document.getElementById('playerArt').src = imageSource;
     document.getElementById('playerTrackTitle').textContent = track.title;
     document.getElementById('playerArtistName').textContent = track.artist;
@@ -991,7 +962,7 @@ function loadTrack(index, autoPlay = true) {
     document.getElementById('miniArtist').textContent = track.artist;
     miniPlayer.classList.add('active'); // Ensure miniPlayer is visible
     
-    // Update Artist Card UI elements
+    // 4. Update Artist Card UI elements
     document.getElementById('expandedArtistName').innerHTML = `${track.artist} <i class="fas fa-check-circle" style="color:#3d94ff; font-size:16px;"></i>`;
     document.getElementById('expandedMonthlyListeners').textContent = '32.5L monthly listeners'; 
     const artistBannerArea = document.getElementById('artistBannerArea');
@@ -1003,32 +974,29 @@ function loadTrack(index, autoPlay = true) {
          artistBannerArea.style.backgroundColor = '#303030';
     }
     
-    // Update the Expanded Player's main background gradient color based on the album art (simplified for example)
-    // In a real app, you'd calculate the dominant color of the imageSource here.
-    const primaryColor = '#004d40'; 
+    // 5. Update Expanded Player's main background (Simplified)
     expandedPlayer.style.background = `linear-gradient(to bottom, rgba(35, 120, 95, 0.9) 0%, var(--bg-darker) 100%)`;
 
-// Reset progress UI
-document.getElementById('playerProgress').value = 0;
-document.getElementById('currentTime').textContent = '0:00';
-document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
+    // 6. Reset progress UI
+    document.getElementById('playerProgress').value = 0;
+    document.getElementById('currentTime').textContent = '0:00';
+    document.getElementById('totalTime').textContent = formatTime(track.duration || 0); 
 
-// >>> ADD THIS LINE <<<
-updateMediaSession(track, imageSource);
+    // 7. Update MediaSession and show system notification
+    updateMediaSession(track, imageSource);
 
-if (autoPlay) {
-    isPlaying = false;
-    togglePlayPause();
+    // 8. Playback and UI State
+    if (autoPlay) {
+        isPlaying = false; // Set to false so togglePlayPause calls play()
+        togglePlayPause();
 
         // Ensure expanded player opens on a track click
         document.getElementById('expandedPlayer').classList.add('active'); 
         document.body.classList.add('lock-scroll'); 
-        // CRITICAL FIX: Ensure the inline transform is reset so the CSS animation starts correctly
         expandedPlayer.style.transform = ''; 
     } else {
         // If not auto-playing (like initial load), ensure play buttons show 'Play'
-        mainPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
-        miniPlayBtn.innerHTML = '<i class="fas fa-play"></i>';
+        updatePlayButtonUI("play");
     }
 
     updatePlaylistView();
