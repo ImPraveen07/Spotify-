@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spotify-clone-cache-v2';
+const CACHE_NAME = 'totify-clone-cache-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,7 @@ const STATIC_ASSETS = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'
 ];
 
-const DYNAMIC_CACHE = 'spotify-dynamic-cache-v1';
+const DYNAMIC_CACHE = 'totify-dynamic-cache-v1';
 
 // Install Service Worker - cache static assets
 self.addEventListener('install', (event) => {
