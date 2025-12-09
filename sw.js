@@ -1,36 +1,38 @@
-const CACHE_NAME = 'totify-clone-cache-v2';
+// --- PWA CACHE SETTINGS ---
+const CACHE_NAME = "totify-cache-v2";
+const DYNAMIC_CACHE = "totify-dynamic-v1";
+
+// Static files that must always be cached
 const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icons/s192.png',  // 192x192 icon
-  './icons/s512.png',  // 512x512 icon
-  './style.css',
-  './main.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap'
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/s192.png",
+  "/s512.png",
+  "/style.css",
+  "/main.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css",
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
 ];
 
-const DYNAMIC_CACHE = 'totify-dynamic-cache-v1';
-
-// Install Service Worker - cache static assets
-self.addEventListener('install', (event) => {
-  console.log('[SW] Installing and caching static assets...');
+// --- INSTALL SW ---
+self.addEventListener("install", event => {
+  console.log("[SW] Installing & caching static assets...");
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate Service Worker - remove old caches
-self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
+// --- ACTIVATE SW ---
+self.addEventListener("activate", event => {
+  console.log("[SW] Activating...");
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
         keys.map(key => {
           if (key !== CACHE_NAME && key !== DYNAMIC_CACHE) {
-            console.log('[SW] Removing old cache:', key);
+            console.log("[SW] Removing old cache:", key);
             return caches.delete(key);
           }
         })
@@ -40,33 +42,34 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch handler - cache-first for static, network-first for dynamic
-self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
+// --- FETCH HANDLER ---
+self.addEventListener("fetch", event => {
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // Cache static assets
-  if (STATIC_ASSETS.includes(requestUrl.href) || requestUrl.origin !== location.origin) {
-    event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
-    );
+  // --- STATIC: Cache First ---
+  if (url.origin === location.origin && STATIC_ASSETS.includes(url.pathname)) {
+    event.respondWith(caches.match(req).then(res => res || fetch(req)));
     return;
   }
 
-  // Dynamic caching for music, images, API requests
+  // --- DYNAMIC: Network First ---
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      return cachedResponse || fetch(event.request).then(networkResponse => {
+    fetch(req)
+      .then(networkRes => {
         return caches.open(DYNAMIC_CACHE).then(cache => {
-          if (event.request.method === 'GET') {
-            cache.put(event.request, networkResponse.clone());
+          if (req.method === "GET") {
+            cache.put(req, networkRes.clone());
           }
-          return networkResponse;
+          return networkRes;
         });
-      }).catch(() => {
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('./index.html');
+      })
+      .catch(() => {
+        // Offline fallback for HTML pages
+        if (req.headers.get("accept")?.includes("text/html")) {
+          return caches.match("/index.html");
         }
-      });
-    })
+        // fallback for other assets can be added here
+      })
   );
 });
